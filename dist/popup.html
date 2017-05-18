@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" media="all" href='css/popup.css' />
+    <title>Bookmark Folder Suggester Pop-up</title>
+  </head>
+  <body class="is-suggesting mdc-typography">
+    <div class="suggestion-progress-block">
+      <label class="suggesting-progress-label status-label">
+        Suggesting...
+      </label>
+    </div>
+
+    <div class="suggestion-has-match-block">
+      <p class="mdc-theme--text-hint-on-background mdc-typography--body1">
+        Click to create/remove a bookmark
+      </p>
+      <ul id="suggestions" class="suggestions-list mdc-list"></ul>
+    </div>
+
+    <div class="suggestion-no-match-block">
+      Not match found, <a id="add-rule-link" href="#">Add a rule</a>?
+    </div>
+
+    <script src="libs/bliss.min.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/popup.js"></script>
+  </body>
+</html>

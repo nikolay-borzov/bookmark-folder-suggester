@@ -1,0 +1,88 @@
+.add-rule-button {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+}
+
+.rules-container {
+  padding: $card-margin;
+  counter-reset: rowNum;
+}
+
+.rule-row {
+  position: relative;
+  transition: background-color 2s;
+  background-color: #fff;
+
+  & + & {
+    margin-top: $card-margin;
+  }
+
+  &.is-new {
+    background-color: #f3f2be;
+  }
+
+  .mdc-card__horizontal-block {
+    padding-right: 0;
+  }
+
+  // Rules counter
+  &::before {
+    position: absolute;
+    top: .5rem;
+    left: .5rem;
+    color: #aaa;
+    text-align: center;
+    counter-increment: rowNum;
+    content: counter(rowNum);
+  }
+}
+
+.folder-link-wrapper {
+  @extend %ellipsis;
+
+  flex-grow: 2;
+  // limit folder name length
+  max-width: $options-body-min-width - 180px;
+  margin: 0 $block-padding;
+  padding: 10px;
+  font-size: 1.2em;
+}
+
+.folder-name {
+  @extend %ellipsis;
+  // limit folder name length
+  max-width: $options-body-min-width - 320px;
+}
+
+.folder-path {
+  @extend %ellipsis;
+
+  @include mdc-theme-prop(color, text-hint-on-light);
+
+  margin-top: 10px;
+  font-size: .9em;
+}
+
+.rule-field-expressions {
+  .mdc-card__primary {
+    padding: 0;
+  }
+
+  .mdc-card__actions {
+    margin: 0;
+  }
+}
+
+.expression-row {
+  display: flex;
+  align-items: center;
+}
+
+.expression-field {
+  @extend %block;
+
+  &-value {
+    flex-grow: 2;
+  } // .expression-field-value
+}

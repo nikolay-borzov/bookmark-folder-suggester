@@ -1,0 +1,128 @@
+.mdc-toolbar__row--fluid-height {
+  min-height: auto;
+}
+
+.mdc-toolbar__row--dense {
+  padding: 10px 14px;
+}
+
+// Set margin to new toolbar height
+.mdc-toolbar-fixed-adjust {
+  margin-top: 56px;
+}
+
+// Use all available space
+.mdc-card__primary {
+  width: 100%;
+}
+
+.mdc-textfield {
+  width: 100%;
+  margin-bottom: 0;
+
+  > .mdc-textfield__input {
+    width: 100%;
+  }
+}
+
+// Align Select height with text input
+.mdc-select {
+  // The same as for text field
+  height: 26px;
+  padding-left: 10px;
+  // Fix triangle position
+  background-position-x: calc(100% - 6px);
+}
+
+.mdc-button--icon-align {
+  display: flex;
+  align-items: center;
+
+  > .icon {
+    padding: 0 6px 0 0;
+  }
+}
+
+// Icon button
+.mdc-button--icon {
+  min-width: auto;
+  height: auto;
+  padding: 6px;
+  border-radius: 50%;
+  font-size: 0;
+  line-height: 1;
+}
+
+.mdc-button[disabled] > .icon {
+  fill: $color-icon-dark-inactive;
+}
+
+.mdc-button:hover > .icon {
+  fill: $color-icon-dark-focused;
+}
+
+.mdc-button--dense > .icon {
+  @extend %icon-size-18;
+}
+
+.mdc-theme--dark {
+  .icon {
+    fill: $color-icon-light;
+  }
+
+  .mdc-button[disabled] > .icon {
+    fill: $color-icon-light-inactive;
+  }
+
+  .mdc-button:hover > .icon {
+    fill: $color-icon-light-focused;
+  }
+}
+
+.mdc-fab {
+  .icon {
+    fill: $color-icon-dark-focused;
+  }
+
+  &[disabled] > .icon {
+    fill: $color-icon-dark-inactive;
+  }
+}
+
+// Dence dialog header
+.mdc-dialog__header {
+  padding-top: 12px;
+  padding-bottom: 10px;
+}
+
+.mdc-dialog__body {
+  margin-top: 0;
+}
+
+.mdc-dialog__header__title {
+  font-size: 1rem;
+}
+
+.mdc-dialog__body {
+  padding: 24px;
+}
+
+.mdc-dialog__body--scrollable {
+  $height: calc(100vh - 188px);
+  // Get all vertical space for dialog content
+  height: $height;
+  max-height: $height;
+}
+
+.mdc-snackbar {
+  // Show over overlay
+  z-index: 3;
+
+  &.is-warning {
+    background-color: $shackbar-color-warning;
+  }
+
+  &.is-error {
+    background-color: $shackbar-color-error;
+  }
+}

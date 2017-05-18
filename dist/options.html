@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bookmark Suggester Options</title>
+  <link rel="stylesheet" type="text/css" media="all" href='css/options.css' />
+</head>
+
+<body class="mdc-typography">
+  <aside id="bookmarks-tree-dialog"
+         style="visibility:hidden"
+         class="mdc-dialog"
+         role="alertdialog"
+         aria-labelledby="mdc-dialog-with-list-label"
+         aria-describedby="bookmarks-tree">
+    <div class="mdc-dialog__surface">
+      <header class="mdc-dialog__header mdc-theme--primary-bg">
+        <h2 id="mdc-dialog-with-list-label"
+            class="mdc-dialog__header__title">
+          Select Bookmark Folder
+        </h2>
+      </header>
+      <section id="bookmarks-tree"
+               class="mdc-dialog__body mdc-dialog__body--scrollable">
+        Rendering Bookmarks Tree...
+      </section>
+      <footer class="mdc-dialog__footer mdc-theme--primary-bg">
+        <button type="button"
+                class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel">
+          Cancel
+        </button>
+        <button type="button"
+                class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept">
+          Confirm
+        </button>
+      </footer>
+    </div>
+    <div class="mdc-dialog__backdrop"></div>
+  </aside>
+
+  <header class="mdc-toolbar mdc-toolbar--fixed _mdc-theme--dark">
+    <div class="mdc-toolbar__row mdc-toolbar__row--fluid-height mdc-toolbar__row--dense">
+      <section class="mdc-toolbar__section mdc-toolbar__section--align-start">
+        <butoon id="export-button"
+                class="mdc-button mdc-button--compact mdc-button--icon-align"
+                title="Export settings to file">
+          <svg class="icon">
+            <use xmlns:xlink="http://www.w3.org/1999/xlink"
+                 xlink:href="icons.svg#download"></use>
+          </svg>
+          Export
+        </butoon>
+        <butoon id="import-button"
+                class="mdc-button mdc-button--compact mdc-button--icon-align"
+                title="Import settings from file">
+          <svg class="icon">
+            <use xmlns:xlink="http://www.w3.org/1999/xlink"
+                 xlink:href="icons.svg#upload"></use>
+          </svg>
+          Import
+        </butoon>
+        <input type="file" id="import-file-input" accept=".json" style="display:none">
+      </section>
+      <section class="mdc-toolbar__section mdc-toolbar__section--align-end mdc-toolbar__section--shrink-to-fit">
+        <button id="save-button"
+                class="mdc-button mdc-button--compact mdc-button--icon-align"
+                type="button">
+          <svg class="icon">
+            <use xmlns:xlink="http://www.w3.org/1999/xlink"
+                 xlink:href="icons.svg#save"></use>
+          </svg>
+          Save
+        </button>
+      </section>
+    </div>
+  </header>
+
+  <main class="mdc-toolbar-fixed-adjust">
+    <div id="tab-content-rules">
+      <div id="rules-container" class="rules-container"></div>
+
+      <button id="add-rule-button"
+              class="add-rule-button mdc-fab"
+              title="Add Rule" aria-label="Add Rule">
+        <svg class="icon">
+          <use xmlns:xlink="http://www.w3.org/1999/xlink"
+               xlink:href="icons.svg#add"></use>
+        </svg>
+      </button>
+    </div>
+    <div id="tab-content-other-settings">
+
+    </div>
+  </main>
+
+  <div id="notification-bar" class="mdc-snackbar"
+       aria-live="assertive"
+       aria-atomic="true"
+       aria-hidden="true">
+  <div class="mdc-snackbar__text"></div>
+  <div class="mdc-snackbar__action-wrapper">
+    <button type="button"
+            class="mdc-button mdc-snackbar__action-button"></button>
+  </div>
+</div>
+
+  <script src="libs/bliss.min.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/options.js"></script>
+</body>
+
+</html>

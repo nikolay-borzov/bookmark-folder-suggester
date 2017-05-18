@@ -1,0 +1,28 @@
+@import 'variables';
+@import 'icons';
+@import 'mdc-custom';
+// Apply MDC theme
+@import '@material/theme/mdc-theme';
+@import '@material/theme/mixins';
+
+%block {
+  padding: $block-padding;
+}
+
+%ellipsis {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+%link-hover-bg {
+  &:hover,
+  &:focus {
+    background-color: $color-bg-link-hover;
+    cursor: pointer;
+  }
+}
+
+html {
+  font-size: 16px;
+}

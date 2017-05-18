@@ -1,0 +1,67 @@
+.bookmark-node-list {
+  margin: 0;
+  padding: 0 0 0 2em;
+  list-style: none;
+}
+
+.bookmark-node {
+  padding: .2em;
+  line-height: 1;
+  white-space: nowrap;
+
+  > .bookmark-node-list {
+    display: none;
+  }
+
+  &.is-expanded > .bookmark-node-list {
+    display: block;
+  }
+}
+
+.bookmark-folder-wrapper {
+  display: inline-flex;
+  position: relative;
+  align-items: center;
+
+  > .bookmark-folder-icon-open {
+    display: none;
+  }
+
+  .is-expanded > & {
+    > .bookmark-folder-expander > .icon {
+      transform: rotate(90deg);
+    }
+
+    > .bookmark-folder-icon-open {
+      display: inline-block;
+    }
+
+    > .bookmark-folder-icon {
+      display: none;
+    }
+  }
+}
+
+.bookmark-folder {
+  @extend %link-hover-bg;
+
+  display: inline-block;
+  margin-left: .3em;
+  padding: 0 .3em;
+  color: inherit;
+  line-height: 1.7em;
+  text-decoration: none;
+  cursor: pointer;
+
+  &.is-active {
+    background: #39f;
+    color: #fff;
+  }
+}
+
+.bookmark-folder-expander {
+  position: absolute;
+  left: -30px;
+  transition: transform 300ms;
+  cursor: pointer;
+}

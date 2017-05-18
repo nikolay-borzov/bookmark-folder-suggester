@@ -1,0 +1,59 @@
+{
+  "name": "bookmark-folder-suggester-chrome-extension",
+  "version": "0.1.0",
+  "description": "Suggests folder for a bookmark using predefined rules",
+  "author": {
+    "name": "Nikolay Borzov (chintsu)",
+    "email": "nikolay.n.borzov@gmail.com"
+  },
+  "license": "MIT",
+  "main": "src/options.js",
+  "scripts": {
+    "build": "concurrently \"npm run build-js\" \"npm run build-css\"",
+    "watch": "concurrently \"npm run watch-js\" \"npm run watch-css\"",
+    "build-js": "browserify src/options.js src/popup.js -p [ factor-bundle -o dist/js/options.js -o dist/js/popup.js ] -o dist/js/common.js",
+    "watch-js": "watchify src/options.js src/popup.js -p [ factor-bundle -o dist/js/options.js -o dist/js/popup.js ] -o dist/js/common.js --verbose --delay",
+    "build-css": "node-sass src/sass --include-path node_modules -o dist/css/ --recursive --output-style compressed",
+    "watch-css": "node-sass src/sass --include-path node_modules -o dist/css/ --recursive --output-style expanded -watch",
+    "build-icons": "gulp svgstore",
+    "build-img": "del-cli dist/img/**/*.png && svg2png src/img/app.svg -o=dist/img/app/128.png -w=128 -h=128 && svg2png src/img/browser-action.svg -o=dist/img/app/48.png -w=48 -h=48 && svg2png src/img/browser-action.svg -o=dist/img/browser-action/32.png -w=32 -h=32 && svg2png src/img/browser-action.svg -o=dist/img/browser-action/24.png -w=24 -h=24 && svg2png src/img/browser-action.svg -o=dist/img/16.png -w=16 -h=16",
+    "eslint-fix": "eslint --fix src/**/*.js",
+    "update-deps": "ncu -u"
+  },
+  "devDependencies": {
+    "browserify": "^14.3.0",
+    "concurrently": "^3.4.0",
+    "del-cli": "^1.0.0",
+    "eslint": "^3.19.0",
+    "factor-bundle": "^2.5.0",
+    "gulp": "^3.9.1",
+    "gulp-inject": "^4.2.0",
+    "gulp-svgmin": "^1.2.3",
+    "gulp-svgstore": "^6.1.0",
+    "material-components-web": "^0.11.0",
+    "node-sass": "^4.5.2",
+    "onchange": "^3.2.1",
+    "sass-lint": "^1.10.2",
+    "stylelint": "^7.10.1",
+    "stylelint-config-sass-guidelines": "^2.1.0",
+    "stylelint-config-standard": "^16.0.0",
+    "stylelint-order": "^0.4.3",
+    "stylelint-scss": "^1.4.4",
+    "svg2png": "^4.1.1",
+    "watchify": "^3.9.0"
+  },
+  "browser": {
+    "bookmarks-helper": "./src/common/bookmarks-helper.js",
+    "dom-helper": "./src/common/dom-helper.js",
+    "constants": "./src/common/constants.js",
+    "rules-engine": "./src/common/rules-engine.js",
+    "settings": "./src/common/settings.js",
+    "notifier": "./src/common/notifier",
+    "bookmarks-modal": "./src/components/bookmarks-modal.js",
+    "rules-grid": "./src/components/rules-grid.js",
+    "@material/auto-init": "./node_modules/@material/auto-init/dist/mdc.autoInit.min.js",
+    "@material/snackbar": "./node_modules/@material/snackbar/dist/mdc.snackbar.min.js",
+    "@material/select": "./node_modules/@material/select/dist/mdc.select.min.js",
+    "@material/dialog": "./node_modules/@material/dialog/dist/mdc.dialog.min.js"
+  }
+}

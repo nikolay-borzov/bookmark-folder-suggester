@@ -1,0 +1,30 @@
+@mixin icon-size($size) {
+  width: #{$size}px;
+  height: #{$size}px;
+}
+
+$icon-sizes: 18 24 36 48;
+
+@each $size in $icon-sizes {
+  %icon-size-#{$size},
+  .icon.icon-size-#{$size} {
+    @include icon-size($size);
+  }
+} // .icon-size-18, .icon-size-24, .icon-size-36, .icon-size-48
+
+$color-icon-dark: rgba(0, 0, 0, .54);
+$color-icon-dark-focused: rgba(0, 0, 0, .87);
+$color-icon-dark-inactive: rgba(0, 0, 0, .26);
+
+$color-icon-light: rgba(255, 255, 255, .7);
+$color-icon-light-focused: rgba(255, 255, 255, 1);
+$color-icon-light-inactive: rgba(255, 255, 255, .5);
+
+.icon {
+  display: inline-block;
+  fill: $color-icon-dark;
+  // From mdc-ripple-bg-base
+  transition: fill 85ms linear;
+
+  @include icon-size(24);
+}

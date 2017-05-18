@@ -1,0 +1,71 @@
+@import '@material/typography/mdc-typography';
+@import '@material/list/mdc-list';
+@import 'common';
+
+.suggestion-progress-block,
+.suggestion-has-match-block,
+.suggestion-no-match-block {
+  display: none;
+}
+
+.is-suggesting .suggestion-progress-block,
+.has-match .suggestion-has-match-block,
+.no-match .suggestion-no-match-block {
+  display: block;
+}
+
+.suggestion-no-match-block {
+  @extend %block;
+
+  white-space: nowrap;
+}
+
+.suggestions-list {
+  min-width: $popup-suggestion-list-min-width;
+  max-height: $popup-suggestion-list-max-height;
+  padding: $card-margin;
+  border: 1px solid rgba(0, 0, 0, .1);
+  overflow-y: auto;
+
+  .mdc-list-divider {
+    margin-top: $card-margin / 2;
+    margin-bottom: $card-margin / 2;
+  }
+}
+
+.folder-name {
+  @extend %ellipsis;
+  // limit folder name length
+  max-width: $popup-suggestion-list-min-width - 120px;
+}
+
+// Hide bookmark icons initially
+.bookmark-icon,
+.bookmark-icon-selected {
+  display: none;
+}
+
+// Show bookmark icon on hover. Change and keep it when selected
+.suggestion-row {
+  cursor: pointer;
+
+  .mdc-list-item__start-detail {
+    margin-right: 16px;
+  }
+
+  &:hover {
+    .bookmark-icon {
+      display: inline;
+    }
+  }
+
+  &.is-selected {
+    .bookmark-icon {
+      display: none;
+    }
+
+    .bookmark-icon-selected {
+      display: inline;
+    }
+  }
+}
