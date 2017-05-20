@@ -1,0 +1,17 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+ <g>
+  <title>Folder</title>
+  <path stroke="#ecc849" stroke-width="2" d="m54.60796,26.43183l-28.17613,0c-5.16562,0 -9.34508,4.22642 -9.34508,9.39204l-0.04696,56.35225c0,5.16562 4.22642,9.39204 9.39204,9.39204l75.13633,0c5.16562,0 9.39204,-4.22642 9.39204,-9.39204l0,-46.96021c0,-5.16562 -4.22642,-9.39204 -9.39204,-9.39204l-37.56816,0l-9.39204,-9.39204z" fill="#FFE793" id="folder"/>
+ </g>
+ <g>
+  <title>Star</title>
+  <path d="m64,85.12973l17.29365,10.43775l-4.58926,-19.67222l15.27885,-13.23607l-20.11995,-1.70698l-7.8633,-18.55289l-7.8633,18.55289l-20.11995,1.70698l15.27885,13.23607l-4.58926,19.67222l17.29365,-10.43775l0,0z" fill="#4285F4" id="star"/>
+ </g>
+ <g>
+  <title>padding</title>
+  <rect fill-opacity="0" id="svg_7" height="128" width="16" y="0" x="0" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="null" fill="#000000"/>
+  <rect fill-opacity="0" id="svg_8" height="128" width="16" y="-0.17798" x="112" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="null" fill="#000000"/>
+  <rect fill-opacity="0" id="svg_9" height="16" width="128" y="0" x="0" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="null" fill="#000000"/>
+  <rect stroke-opacity="0" stroke="#000000" fill-opacity="0" id="svg_10" height="16" width="128" y="112" x="0" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="null" fill="#000000"/>
+ </g>
+</svg>

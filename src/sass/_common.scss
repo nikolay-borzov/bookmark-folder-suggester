@@ -5,8 +5,12 @@
 @import '@material/theme/mdc-theme';
 @import '@material/theme/mixins';
 
-%block {
-  padding: $block-padding;
+%block-padding {
+  padding: $block-margin;
+}
+
+%block-margin {
+  padding: $block-margin;
 }
 
 %ellipsis {
@@ -25,4 +29,10 @@
 
 html {
   font-size: 16px;
+}
+
+body {
+  // reset user agent style
+  margin: 0;
+  background: $color-body-background;
 }

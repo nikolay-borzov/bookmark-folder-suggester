@@ -114,9 +114,6 @@ function createSuggestedRule(parameters) {
 
   // Create a rule using tab title and url as values for expressions
   let rule = {
-    folder: {
-      id: '0'
-    },
     expressions: [{
       typeId: constants.EXPRESSION_TYPES.urlStartsWith,
       value: parameters.currentTab.url

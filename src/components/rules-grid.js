@@ -19,8 +19,7 @@ let helpers = {
    */
   getEmptyRule() {
     return {
-      expressions: [helpers.getEmptyExpression()],
-      folder: { title: '' }
+      expressions: [helpers.getEmptyExpression()]
     };
   },
 
@@ -134,14 +133,17 @@ let render = {
    * @param {Rule} rule
    */
   bookmarkSection(rule) {
-    let bookmarkData = rule.folder.id ? JSON.stringify(rule.folder) : null;
+    let folder = rule.folder || { title: '' };
+    let isFolderSet = !!folder.id;
+    let bookmarkData = isFolderSet ? JSON.stringify(folder) : null;
 
     let folderIcon = domHelper.create.icon(constants.icons.folder);
 
-    let folderName = {
+    let folderName = folder.title || 'Select folder';
+    let folderNameElement = {
       tag: 'span',
       className: 'folder-name js-folder-name',
-      textContent: rule.folder.title || 'Select folder'
+      textContent: folderName
     };
 
     return {
@@ -151,15 +153,15 @@ let render = {
         className: 'folder-link-wrapper js-folder-link-wrapper',
         contents: [{
           tag: 'button',
-          className: 'js-select-folder-button mdc-button mdc-button--raised mdc-button--icon-align mdc-button--compact mdc-button--dense',
-          title: rule.folder.title,
+          className: `js-select-folder-button mdc-button ${isFolderSet ? '' : 'mdc-button--primary'} mdc-button--raised mdc-button--icon-align mdc-button--compact mdc-button--dense`,
+          title: folderName,
           'data-bookmark': bookmarkData,
-          contents: [folderIcon, folderName]
+          contents: [folderIcon, folderNameElement]
         }, {
           tag: 'div',
           className: 'folder-path js-folder-path',
-          title: rule.folder.path,
-          contents: rule.folder.path
+          title: folder.path,
+          contents: folder.path
         }]
       }]
     };
@@ -329,6 +331,8 @@ let actions = {
     ruleRow.scrollIntoView();
 
     ruleRow.classList.remove('is-new');
+
+    $('.js-select-folder-button', ruleRow).focus();
   },
 
   /**
@@ -350,6 +354,8 @@ let actions = {
         'data-bookmark': JSON.stringify(bookmarkFolder),
         title: bookmarkFolder.title
       });
+
+      button.classList.remove('mdc-button--primary');
 
       let folderName = $('.js-folder-name', button);
       $.set(folderName, {

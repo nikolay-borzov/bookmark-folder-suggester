@@ -28,8 +28,7 @@ let bookmark = null;
 /** DOM elements */
 let elements = {
   suggestionsContainer: null,
-  body: null,
-  addRuleLink: null
+  body: null
 };
 
 let helpers = {
@@ -254,8 +253,8 @@ $.ready().then(() => {
   elements.suggestionsContainer = document.getElementById('suggestions');
   elements.body = document.getElementsByTagName('body')[0];
 
-  elements.addRuleLink = document.getElementById('add-rule-link');
-  elements.addRuleLink.addEventListener('click', actions.addRule);
+  let addRuleLink = document.getElementById('add-rule-button');
+  addRuleLink.addEventListener('click', actions.addRule);
 
   $.delegate(elements.suggestionsContainer,
              'click',

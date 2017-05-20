@@ -18,9 +18,6 @@
 body {
   min-width: $options-body-min-width;
   min-height: $options-body-min-height;
-  // reset user agent style
-  margin: 0;
-  background: $color-body-background;
 
   &::after {
     @include mdc-theme-prop(background-color, text-primary-on-light);

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Bookmark Suggester Options</title>
+  <title>Bookmark Suggester Folder Options</title>
   <link rel="stylesheet" type="text/css" media="all" href='css/options.css' />
 </head>
 
@@ -43,18 +43,20 @@
   <header class="mdc-toolbar mdc-toolbar--fixed _mdc-theme--dark">
     <div class="mdc-toolbar__row mdc-toolbar__row--fluid-height mdc-toolbar__row--dense">
       <section class="mdc-toolbar__section mdc-toolbar__section--align-start">
-        <butoon id="export-button"
+        <butoon id="export-button" tabindex="0"
                 class="mdc-button mdc-button--compact mdc-button--icon-align"
-                title="Export settings to file">
+                title="Export settings to file"
+                type="button">
           <svg class="icon">
             <use xmlns:xlink="http://www.w3.org/1999/xlink"
                  xlink:href="icons.svg#download"></use>
           </svg>
           Export
         </butoon>
-        <butoon id="import-button"
+        <butoon id="import-button" tabindex="0"
                 class="mdc-button mdc-button--compact mdc-button--icon-align"
-                title="Import settings from file">
+                title="Import settings from file"
+                type="button">
           <svg class="icon">
             <use xmlns:xlink="http://www.w3.org/1999/xlink"
                  xlink:href="icons.svg#upload"></use>
@@ -79,9 +81,7 @@
 
   <main class="mdc-toolbar-fixed-adjust">
     <div id="tab-content-rules">
-      <div id="rules-container" class="rules-container"></div>
-
-      <button id="add-rule-button"
+       <button id="add-rule-button"
               class="add-rule-button mdc-fab"
               title="Add Rule" aria-label="Add Rule">
         <svg class="icon">
@@ -89,6 +89,10 @@
                xlink:href="icons.svg#add"></use>
         </svg>
       </button>
+
+      <div id="rules-container" class="rules-container"></div>
+
+     
     </div>
     <div id="tab-content-other-settings">
 

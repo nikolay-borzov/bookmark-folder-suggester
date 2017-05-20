@@ -1,10 +1,23 @@
 @import '@material/typography/mdc-typography';
 @import '@material/list/mdc-list';
+@import '@material/button/mdc-button';
+@import '@material/elevation/mixins';
 @import 'common';
+
+$suggestion-actions-height: 60px;
+
+body {
+  padding-bottom: $suggestion-actions-height;
+
+  &.is-suggesting {
+    padding-bottom: 0;
+  }
+}
 
 .suggestion-progress-block,
 .suggestion-has-match-block,
-.suggestion-no-match-block {
+.suggestion-no-match-block,
+.suggestion-actions {
   display: none;
 }
 
@@ -14,22 +27,56 @@
   display: block;
 }
 
+.suggestion-progress-block,
+.suggestion-has-match-block,
 .suggestion-no-match-block {
-  @extend %block;
+  @extend %block-padding;
+}
+
+.suggestion-no-match-block {
+  @include mdc-theme-prop(color, text-hint-on-dark);
 
   white-space: nowrap;
 }
 
 .suggestions-list {
+  @include mdc-elevation(2);
+  @include mdc-theme-prop(background-color, background);
+
+  @extend %block-padding;
+
   min-width: $popup-suggestion-list-min-width;
-  max-height: $popup-suggestion-list-max-height;
-  padding: $card-margin;
   border: 1px solid rgba(0, 0, 0, .1);
   overflow-y: auto;
 
   .mdc-list-divider {
-    margin-top: $card-margin / 2;
-    margin-bottom: $card-margin / 2;
+    margin-top: $block-margin / 2;
+    margin-bottom: $block-margin / 2;
+  }
+}
+
+.suggestion-actions {
+  @include mdc-elevation(4);
+  @include mdc-theme-prop(background-color, background);
+
+  @extend %block-padding;
+
+  box-sizing: border-box;
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  align-items: center;
+  height: $suggestion-actions-height;
+  border: 1px solid rgba(0, 0, 0, .1);
+
+  .has-match &,
+  .no-match & {
+    display: flex;
+  }
+
+  .no-match & {
+    justify-content: center;
   }
 }
 

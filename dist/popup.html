@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,22 +7,29 @@
     <title>Bookmark Folder Suggester Pop-up</title>
   </head>
   <body class="is-suggesting mdc-typography">
-    <div class="suggestion-progress-block">
-      <label class="suggesting-progress-label status-label">
+    <section class="suggestion-progress-block">
+      <p class="mdc-theme--text-primary-on-dark mdc-typography--body1">
         Suggesting...
       </label>
-    </div>
+    </section>
 
-    <div class="suggestion-has-match-block">
-      <p class="mdc-theme--text-hint-on-background mdc-typography--body1">
+    <section class="suggestion-has-match-block">
+      <p class="mdc-theme--text-primary-on-dark mdc-typography--body1">
         Click to create/remove a bookmark
       </p>
       <ul id="suggestions" class="suggestions-list mdc-list"></ul>
-    </div>
+    </section>
 
-    <div class="suggestion-no-match-block">
-      Not match found, <a id="add-rule-link" href="#">Add a rule</a>?
-    </div>
+    <section class="suggestion-no-match-block mdc-theme--text-primary-on-dark">
+      Not match found
+    </section>
+
+    <section class="suggestion-actions">
+      <button id="add-rule-button" type="button"
+              class="mdc-button mdc-button--compact mdc-button--dense mdc-button--raised">
+        Add rule
+      </button>
+    </section>
 
     <script src="libs/bliss.min.js"></script>
     <script src="js/common.js"></script>
