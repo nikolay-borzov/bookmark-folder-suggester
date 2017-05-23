@@ -249,7 +249,7 @@ $.ready().then(() => {
   elements.body = document.body;
 
   let addRuleLink = document.getElementById('add-rule-button');
-  addRuleLink.addEventListener('click', () => actions.addRule());
+  addRuleLink.addEventListener('click', () => actions.addRule(currentBookmark));
 
   $.delegate(elements.suggestionsContainer,
              'click',
