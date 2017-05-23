@@ -1,4 +1,4 @@
-require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({9:[function(require,module,exports){
+require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({10:[function(require,module,exports){
 'use strict';
 
 /**
@@ -139,36 +139,40 @@ module.exports = {
   createSuggestedRule
 };
 
-},{"constants":6,"settings":10}],10:[function(require,module,exports){
+},{"constants":7,"settings":11}],11:[function(require,module,exports){
 'use strict';
 
 /**
  * @typedef {Object} Settings
  * @property {Array.<Rule>} rules
- * @property {Object} other
- * @property {boolean} other.useLocalStorage
+ * @property {boolean} autoBookmark
  */
 
-const storage = chrome.storage.local;
+let storage = chrome.storage.local;
+
+const defaultSettings = {
+  rules: [],
+  autoBookmark: true
+};
 
 /**
  * Restores settings from the storage
- * @return {Promise}
+ * @param {string|Array.<string>} [key] - Settings key(s)
+ * @return {Promise.<Settings>}
  */
-function get() {
+function get(key) {
   return new Promise(resolve => {
-    storage.get({ rules: [] }, resolve);
+    storage.get(key || defaultSettings, resolve);
   });
 }
 
 /**
  * Saves settings to the storage
  * @param {Settings} settings
- * @param {Array} settings.rules
- * @return {Promise}
+ * @return {Promise.<Settings>}
  */
 function set(settings) {
-  return new Promise((resolve, reject)=> {
+  return new Promise((resolve, reject) => {
     storage.set(settings, function() {
       if (chrome.runtime.lastError) {
         reject(chrome.runtime.lastError);
@@ -247,9 +251,7 @@ function importFromFile(file) {
  */
 function setRuleSuggestData(data) {
   return new Promise(resolve => {
-    chrome.storage.local.set(data, () => {
-      resolve();
-    });
+    chrome.storage.local.set(data, resolve);
   });
 }
 
@@ -276,13 +278,21 @@ function getRuleSuggestData() {
 }
 
 /**
- * Get storage bytes in use
+ * Gets storage bytes in use
+ * @return {Promise.<Object>}
  */
-// TODO: Make use
-function getStorageByteInUse() {
+function getStorageBytesInUse() {
   return new Promise(resolve => {
     storage.getBytesInUse(null, resolve);
   });
+}
+
+/**
+ * Gets storage quota bytes
+ * @return {number}
+ */
+function getStorageQuotaBytes() {
+  return storage.QUOTA_BYTES;
 }
 
 module.exports = {
@@ -292,10 +302,11 @@ module.exports = {
   importFromFile,
   setRuleSuggestData,
   getRuleSuggestData,
-  getStorageByteInUse
+  getStorageBytesInUse,
+  getStorageQuotaBytes
 };
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 'use strict';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -346,7 +357,7 @@ module.exports = {
   create
 };
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 'use strict';
 
 const EXPRESSION_TYPES = {
@@ -381,7 +392,8 @@ module.exports = {
     close: 'close',
     add: 'add',
     star: 'star',
-    starBorder: 'star-border'
+    starBorder: 'star-border',
+    help: 'help'
   }
 };
 

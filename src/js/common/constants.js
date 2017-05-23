@@ -32,6 +32,7 @@ module.exports = {
     close: 'close',
     add: 'add',
     star: 'star',
-    starBorder: 'star-border'
+    starBorder: 'star-border',
+    help: 'help'
   }
 };

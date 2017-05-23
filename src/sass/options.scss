@@ -7,9 +7,12 @@
 // Order matters for three next modules
 @import '@material/list/mdc-list';
 @import '@material/menu/mdc-menu';
+@import '@material/form-field/mdc-form-field';
 @import '@material/select/mdc-select';
 @import '@material/dialog/mdc-dialog';
 @import '@material/snackbar/mdc-snackbar';
+@import '@material/tabs/mdc-tabs';
+@import '@material/checkbox/mdc-checkbox';
 // Self
 @import 'common';
 @import 'bookmarks-modal';
@@ -39,3 +42,54 @@ body {
     z-index: 2;
   }
 }
+
+.tab-panel {
+  display: none;
+
+  &.is-active {
+    display: block;
+  }
+}
+
+.panels-container {
+  @extend %block-padding;
+}
+
+.other-settings-panel {
+  @extend %block-padding;
+}
+
+.progress {
+  @include mdc-theme-prop(border-color, primary);
+
+  @extend %block-margin;
+
+  width: 100%;
+  border-width: 1px;
+  border-style: solid;
+
+  .progress-bar {
+    @include mdc-theme-prop(background-color, primary);
+
+    display: inline-block;
+  }
+
+  .progress-label {
+    @include mdc-theme-prop(background-color, primary);
+    @include mdc-theme-prop(color, text-primary-on-primary);
+
+    display: inline-block;
+    padding: 0 $block-margin;
+    line-height: 1.7em;
+    text-align: right;
+  }
+}
+
+.storage-used-row {
+  display: flex;
+
+  .storage-used-field {
+    flex-grow: 2;
+  }
+}
+

@@ -1,7 +1,8 @@
 {
   "manifest_version": 2,
   "name": "Bookmark Folder Suggester",
-  "version": "0.1.0",
+  "short_name": "Bookmark Folder Suggester",
+  "version": "0.3.0",
   "author": "Nikolay Borzov (chintsu)",
 
   "description": "Suggests folder for a bookmark using predefined rules",

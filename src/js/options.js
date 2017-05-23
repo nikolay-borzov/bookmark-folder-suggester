@@ -1,5 +1,8 @@
 'use strict';
 
+const mdcDialog = require('@material/dialog');
+const mdcTabs = require('@material/tabs');
+
 const settings = require('settings');
 const rulesGrid = require('rules-grid');
 const rulesEngine = require('rules-engine');
@@ -8,28 +11,68 @@ const notifier = require('notifier');
 
 const STORAGE_SIZE_EXCEEDED_ERROR_KEY = 'QUOTA_BYTES_PER_ITEM';
 
-/** DOM elements */
+let helpDialog = null;
+
 let elements = {
-  saveButton: null,
-  exportButton: null,
-  importButton: null
+  autoBookmarkCheckbox: null,
+  storageUsedText: null,
+  storageProgressBar: null
 };
+
+function initTabs() {
+  let tabBar = window.dynamicTabBar = new mdcTabs.MDCTabBar(document.getElementById('tabs-bar'));
+  tabBar.preventDefaultOnClick = true;
+
+  let panelsContainer = document.getElementById('panels-container');
+
+  let selectPanel = (activeTabIndex) => {
+    let activePanel = $('.tab-panel.is-active', panelsContainer);
+    activePanel.classList.remove('is-active');
+    $.set(activePanel, {
+      'aria-hidden': true
+    });
+
+    let panel = $(`.tab-panel:nth-child(${activeTabIndex + 1})`, panelsContainer);
+    panel.classList.add('is-active');
+    $.set(panel, {
+      'aria-hidden': false
+    });
+  };
+
+  tabBar.listen('MDCTabBar:change', ({ detail: tabs }) => {
+    selectPanel(tabs.activeTabIndex);
+  });
+}
 
 /**
  * Restores options
  */
 function restore(settingsObj) {
-  let addRules = settingsObj => {
+  let restoreSettings = settingsObj => {
     rulesGrid.addRules(settingsObj.rules);
 
     // Add suggested rule if one exists
     addSuggestedRule();
+
+    elements.autoBookmarkCheckbox.checked = settingsObj.autoBookmark;
+
+    settings.getStorageBytesInUse().then(bytesInUse => {
+      const quota = settings.getStorageQuotaBytes();
+
+      let inUseKb = Math.floor(bytesInUse / 1000).toLocaleString();
+      let quotaKb = Math.floor(quota / 1000).toLocaleString();
+
+      let usagePercent = Math.floor((100 * bytesInUse) / quota);
+
+      elements.storageUsedText.innerText = `${inUseKb}/${quotaKb} Kb`;
+      $.style(elements.storageProgressBar, { width: `${usagePercent}%` });
+    });
   };
 
   if (settingsObj) {
-    addRules(settingsObj);
+    restoreSettings(settingsObj);
   } else {
-    settings.get().then(addRules);
+    settings.get().then(restoreSettings);
   }
 }
 
@@ -80,9 +123,12 @@ let actions = {
    */
   save() {
     notifier.progressStart('Saving...');
-    let rules = rulesGrid.getRules();
+    let settingsObj = {
+      rules: rulesGrid.getRules(),
+      autoBookmark: elements.autoBookmarkCheckbox.checked
+    };
 
-    return settings.set({ rules })
+    return settings.set(settingsObj)
       .then(settingsObj => {
         notifier.success('Saved');
 
@@ -120,21 +166,31 @@ let actions = {
     settings.importFromFile(this.files[0])
       .then(restore)
       .catch(() => notifier.error('Cannot import settings file'));
+  },
+
+  getHelp() {
+    if (!helpDialog) {
+      helpDialog = new mdcDialog.MDCDialog(document.getElementById('help-dialog'));
+    }
+
+    helpDialog.show();
   }
 };
 
 $.ready().then(() => {
   rulesGrid.init();
 
+  elements.autoBookmarkCheckbox = document.getElementById('auto-bookmark-checkbox');
+  elements.storageUsedText = document.getElementById('storage-used-text');
+  elements.storageProgressBar = document.getElementById('storage-used-progress-bar');
+
   // Save settings
   let saveButton = document.getElementById('save-button');
   saveButton.addEventListener('click', actions.save);
-  elements.saveButton = saveButton;
 
   // Export settings to file
   let exportButton = document.getElementById('export-button');
   exportButton.addEventListener('click', actions.export);
-  elements.exportButton = exportButton;
 
   // Process selected settings files
   let importFileInput = document.getElementById('import-file-input');
@@ -146,6 +202,9 @@ $.ready().then(() => {
     importFileInput.click();
   });
 
+  let helpButton = document.getElementById('help-button');
+  helpButton.addEventListener('click', actions.getHelp);
+
   // Listen to message in case options page is already open
   chrome.runtime.onMessage.addListener(request => {
     if (request.addSuggestedRule) {
@@ -153,5 +212,6 @@ $.ready().then(() => {
     }
   });
 
+  initTabs();
   restore();
 });

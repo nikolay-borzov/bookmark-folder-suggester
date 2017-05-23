@@ -3,30 +3,34 @@
 /**
  * @typedef {Object} Settings
  * @property {Array.<Rule>} rules
- * @property {Object} other
- * @property {boolean} other.useLocalStorage
+ * @property {boolean} autoBookmark
  */
 
-const storage = chrome.storage.local;
+let storage = chrome.storage.local;
+
+const defaultSettings = {
+  rules: [],
+  autoBookmark: true
+};
 
 /**
  * Restores settings from the storage
- * @return {Promise}
+ * @param {string|Array.<string>} [key] - Settings key(s)
+ * @return {Promise.<Settings>}
  */
-function get() {
+function get(key) {
   return new Promise(resolve => {
-    storage.get({ rules: [] }, resolve);
+    storage.get(key || defaultSettings, resolve);
   });
 }
 
 /**
  * Saves settings to the storage
  * @param {Settings} settings
- * @param {Array} settings.rules
- * @return {Promise}
+ * @return {Promise.<Settings>}
  */
 function set(settings) {
-  return new Promise((resolve, reject)=> {
+  return new Promise((resolve, reject) => {
     storage.set(settings, function() {
       if (chrome.runtime.lastError) {
         reject(chrome.runtime.lastError);
@@ -105,9 +109,7 @@ function importFromFile(file) {
  */
 function setRuleSuggestData(data) {
   return new Promise(resolve => {
-    chrome.storage.local.set(data, () => {
-      resolve();
-    });
+    chrome.storage.local.set(data, resolve);
   });
 }
 
@@ -134,13 +136,21 @@ function getRuleSuggestData() {
 }
 
 /**
- * Get storage bytes in use
+ * Gets storage bytes in use
+ * @return {Promise.<Object>}
  */
-// TODO: Make use
-function getStorageByteInUse() {
+function getStorageBytesInUse() {
   return new Promise(resolve => {
     storage.getBytesInUse(null, resolve);
   });
+}
+
+/**
+ * Gets storage quota bytes
+ * @return {number}
+ */
+function getStorageQuotaBytes() {
+  return storage.QUOTA_BYTES;
 }
 
 module.exports = {
@@ -150,5 +160,6 @@ module.exports = {
   importFromFile,
   setRuleSuggestData,
   getRuleSuggestData,
-  getStorageByteInUse
+  getStorageBytesInUse,
+  getStorageQuotaBytes
 };

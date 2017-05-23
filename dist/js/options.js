@@ -1,5 +1,8 @@
-require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({13:[function(require,module,exports){
+require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({14:[function(require,module,exports){
 'use strict';
+
+const mdcDialog = require('@material/dialog');
+const mdcTabs = require('@material/tabs');
 
 const settings = require('settings');
 const rulesGrid = require('rules-grid');
@@ -9,28 +12,68 @@ const notifier = require('notifier');
 
 const STORAGE_SIZE_EXCEEDED_ERROR_KEY = 'QUOTA_BYTES_PER_ITEM';
 
-/** DOM elements */
+let helpDialog = null;
+
 let elements = {
-  saveButton: null,
-  exportButton: null,
-  importButton: null
+  autoBookmarkCheckbox: null,
+  storageUsedText: null,
+  storageProgressBar: null
 };
+
+function initTabs() {
+  let tabBar = window.dynamicTabBar = new mdcTabs.MDCTabBar(document.getElementById('tabs-bar'));
+  tabBar.preventDefaultOnClick = true;
+
+  let panelsContainer = document.getElementById('panels-container');
+
+  let selectPanel = (activeTabIndex) => {
+    let activePanel = $('.tab-panel.is-active', panelsContainer);
+    activePanel.classList.remove('is-active');
+    $.set(activePanel, {
+      'aria-hidden': true
+    });
+
+    let panel = $(`.tab-panel:nth-child(${activeTabIndex + 1})`, panelsContainer);
+    panel.classList.add('is-active');
+    $.set(panel, {
+      'aria-hidden': false
+    });
+  };
+
+  tabBar.listen('MDCTabBar:change', ({ detail: tabs }) => {
+    selectPanel(tabs.activeTabIndex);
+  });
+}
 
 /**
  * Restores options
  */
 function restore(settingsObj) {
-  let addRules = settingsObj => {
+  let restoreSettings = settingsObj => {
     rulesGrid.addRules(settingsObj.rules);
 
     // Add suggested rule if one exists
     addSuggestedRule();
+
+    elements.autoBookmarkCheckbox.checked = settingsObj.autoBookmark;
+
+    settings.getStorageBytesInUse().then(bytesInUse => {
+      const quota = settings.getStorageQuotaBytes();
+
+      let inUseKb = Math.floor(bytesInUse / 1000).toLocaleString();
+      let quotaKb = Math.floor(quota / 1000).toLocaleString();
+
+      let usagePercent = Math.floor((100 * bytesInUse) / quota);
+
+      elements.storageUsedText.innerText = `${inUseKb}/${quotaKb} Kb`;
+      $.style(elements.storageProgressBar, { width: `${usagePercent}%` });
+    });
   };
 
   if (settingsObj) {
-    addRules(settingsObj);
+    restoreSettings(settingsObj);
   } else {
-    settings.get().then(addRules);
+    settings.get().then(restoreSettings);
   }
 }
 
@@ -81,9 +124,12 @@ let actions = {
    */
   save() {
     notifier.progressStart('Saving...');
-    let rules = rulesGrid.getRules();
+    let settingsObj = {
+      rules: rulesGrid.getRules(),
+      autoBookmark: elements.autoBookmarkCheckbox.checked
+    };
 
-    return settings.set({ rules })
+    return settings.set(settingsObj)
       .then(settingsObj => {
         notifier.success('Saved');
 
@@ -121,21 +167,31 @@ let actions = {
     settings.importFromFile(this.files[0])
       .then(restore)
       .catch(() => notifier.error('Cannot import settings file'));
+  },
+
+  getHelp() {
+    if (!helpDialog) {
+      helpDialog = new mdcDialog.MDCDialog(document.getElementById('help-dialog'));
+    }
+
+    helpDialog.show();
   }
 };
 
 $.ready().then(() => {
   rulesGrid.init();
 
+  elements.autoBookmarkCheckbox = document.getElementById('auto-bookmark-checkbox');
+  elements.storageUsedText = document.getElementById('storage-used-text');
+  elements.storageProgressBar = document.getElementById('storage-used-progress-bar');
+
   // Save settings
   let saveButton = document.getElementById('save-button');
   saveButton.addEventListener('click', actions.save);
-  elements.saveButton = saveButton;
 
   // Export settings to file
   let exportButton = document.getElementById('export-button');
   exportButton.addEventListener('click', actions.export);
-  elements.exportButton = exportButton;
 
   // Process selected settings files
   let importFileInput = document.getElementById('import-file-input');
@@ -147,6 +203,9 @@ $.ready().then(() => {
     importFileInput.click();
   });
 
+  let helpButton = document.getElementById('help-button');
+  helpButton.addEventListener('click', actions.getHelp);
+
   // Listen to message in case options page is already open
   chrome.runtime.onMessage.addListener(request => {
     if (request.addSuggestedRule) {
@@ -154,10 +213,11 @@ $.ready().then(() => {
     }
   });
 
+  initTabs();
   restore();
 });
 
-},{"bookmarks-helper":5,"notifier":8,"rules-engine":9,"rules-grid":12,"settings":10}],12:[function(require,module,exports){
+},{"@material/dialog":2,"@material/tabs":5,"bookmarks-helper":6,"notifier":9,"rules-engine":10,"rules-grid":13,"settings":11}],13:[function(require,module,exports){
 'use strict';
 
 const mdcSelect = require('@material/select');
@@ -320,6 +380,7 @@ let render = {
         }, {
           tag: 'div',
           className: 'folder-path js-folder-path',
+          'aria-label': 'Folder path',
           title: folder.path,
           contents: folder.path
         }]
@@ -429,8 +490,7 @@ let render = {
     let selectedOption = {
       tag: 'span',
       className: 'mdc-select__selected-text',
-      textContent: constants.EXPRESSION_TYPES_NAMES_MAP[expression.typeId],
-      'aria-label': 'Expression Type'
+      textContent: constants.EXPRESSION_TYPES_NAMES_MAP[expression.typeId]
     };
 
     return {
@@ -438,6 +498,7 @@ let render = {
       className: 'mdc-select js-expression-type',
       'data-mdc-auto-init': 'MDCSelect',
       role: 'listbox',
+      'aria-label': 'Expression type',
       tabindex: 0,
       contents: [selectedOption, {
         tag: 'div',
@@ -559,7 +620,7 @@ module.exports = {
   addRule: actions.addRuleRow
 };
 
-},{"@material/auto-init":1,"@material/select":3,"bookmarks-modal":11,"constants":6,"dom-helper":7}],11:[function(require,module,exports){
+},{"@material/auto-init":1,"@material/select":3,"bookmarks-modal":12,"constants":7,"dom-helper":8}],12:[function(require,module,exports){
 'use strict';
 
 const mdcDialog = require('@material/dialog');
@@ -856,7 +917,7 @@ module.exports = {
   open: open
 };
 
-},{"@material/dialog":2,"bookmarks-helper":5,"constants":6,"dom-helper":7,"notifier":8}],8:[function(require,module,exports){
+},{"@material/dialog":2,"bookmarks-helper":6,"constants":7,"dom-helper":8,"notifier":9}],9:[function(require,module,exports){
 'use strict';
 
 const mdcSnackbar = require('@material/snackbar');
@@ -976,7 +1037,7 @@ module.exports = {
   }
 };
 
-},{"@material/snackbar":4}],5:[function(require,module,exports){
+},{"@material/snackbar":4}],6:[function(require,module,exports){
 'use strict';
 
 /**
@@ -1032,6 +1093,13 @@ module.exports = {
   getBookmarkPath
 };
 
+},{}],5:[function(require,module,exports){
+/*!
+ Material Components for the web
+ Copyright (c) 2017 Google Inc.
+ License: Apache-2.0
+*/
+!function(t,e){"object"==typeof exports&&"object"==typeof module?module.exports=e():"function"==typeof define&&define.amd?define([],e):"object"==typeof exports?exports.tabs=e():(t.mdc=t.mdc||{},t.mdc.tabs=e())}(this,function(){return function(t){function e(i){if(n[i])return n[i].exports;var r=n[i]={i:i,l:!1,exports:{}};return t[i].call(r.exports,r,r.exports,e),r.l=!0,r.exports}var n={};return e.m=t,e.c=n,e.i=function(t){return t},e.d=function(t,n,i){e.o(t,n)||Object.defineProperty(t,n,{configurable:!1,enumerable:!0,get:i})},e.n=function(t){var n=t&&t.__esModule?function(){return t.default}:function(){return t};return e.d(n,"a",n),n},e.o=function(t,e){return Object.prototype.hasOwnProperty.call(t,e)},e.p="/assets/",e(e.s=80)}({0:function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0});var i=n(1);n.d(e,"MDCFoundation",function(){return i.a});var r=n(2);n.d(e,"MDCComponent",function(){return r.a})},1:function(t,e,n){"use strict";function i(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}var r=function(){function t(t,e){for(var n=0;n<e.length;n++){var i=e[n];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(t,i.key,i)}}return function(e,n,i){return n&&t(e.prototype,n),i&&t(e,i),e}}(),a=function(){function t(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{};i(this,t),this.adapter_=e}return r(t,null,[{key:"cssClasses",get:function(){return{}}},{key:"strings",get:function(){return{}}},{key:"numbers",get:function(){return{}}},{key:"defaultAdapter",get:function(){return{}}}]),r(t,[{key:"init",value:function(){}},{key:"destroy",value:function(){}}]),t}();e.a=a},15:function(t,e,n){"use strict";n.d(e,"b",function(){return i}),n.d(e,"a",function(){return r});var i={UPGRADED:"mdc-tab-bar-upgraded"},r={TAB_SELECTOR:".mdc-tab",INDICATOR_SELECTOR:".mdc-tab-bar__indicator"}},16:function(t,e,n){"use strict";n.d(e,"a",function(){return i});var i={ACTIVE:"mdc-tab--active"}},17:function(t,e,n){"use strict";function i(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}function r(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return!e||"object"!=typeof e&&"function"!=typeof e?t:e}function a(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e)}var o=n(2),u=n(4),s=n(16),c=n(58);n.d(e,"a",function(){return c.a}),n.d(e,"b",function(){return l});var f=function t(e,n,i){null===e&&(e=Function.prototype);var r=Object.getOwnPropertyDescriptor(e,n);if(void 0===r){var a=Object.getPrototypeOf(e);return null===a?void 0:t(a,n,i)}if("value"in r)return r.value;var o=r.get;if(void 0!==o)return o.call(i)},d=function(){function t(t,e){for(var n=0;n<e.length;n++){var i=e[n];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(t,i.key,i)}}return function(e,n,i){return n&&t(e.prototype,n),i&&t(e,i),e}}(),l=function(t){function e(){var t;i(this,e);for(var n=arguments.length,a=Array(n),o=0;o<n;o++)a[o]=arguments[o];var s=r(this,(t=e.__proto__||Object.getPrototypeOf(e)).call.apply(t,[this].concat(a)));return s.ripple_=u.MDCRipple.attachTo(s.root_),s}return a(e,t),d(e,[{key:"computedWidth",get:function(){return this.foundation_.getComputedWidth()}},{key:"computedLeft",get:function(){return this.foundation_.getComputedLeft()}},{key:"isActive",get:function(){return this.foundation_.isActive()},set:function(t){this.foundation_.setActive(t)}},{key:"preventDefaultOnClick",get:function(){return this.foundation_.preventsDefaultOnClick()},set:function(t){this.foundation_.setPreventDefaultOnClick(t)}}],[{key:"attachTo",value:function(t){return new e(t)}}]),d(e,[{key:"destroy",value:function(){this.ripple_.destroy(),f(e.prototype.__proto__||Object.getPrototypeOf(e.prototype),"destroy",this).call(this)}},{key:"getDefaultFoundation",value:function(){var t=this;return new c.a({addClass:function(e){return t.root_.classList.add(e)},removeClass:function(e){return t.root_.classList.remove(e)},registerInteractionHandler:function(e,n){return t.root_.addEventListener(e,n)},deregisterInteractionHandler:function(e,n){return t.root_.removeEventListener(e,n)},getOffsetWidth:function(){return t.root_.offsetWidth},getOffsetLeft:function(){return t.root_.offsetLeft},notifySelected:function(){return t.emit("MDCTab:selected",{tab:t},!0)}})}},{key:"initialSyncWithDOM",value:function(){this.isActive=this.root_.classList.contains(s.a.ACTIVE)}},{key:"measureSelf",value:function(){this.foundation_.measureSelf()}}]),e}(o.a)},2:function(t,e,n){"use strict";function i(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}var r=n(1),a=function(){function t(t,e){for(var n=0;n<e.length;n++){var i=e[n];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(t,i.key,i)}}return function(e,n,i){return n&&t(e.prototype,n),i&&t(e,i),e}}(),o=function(){function t(e){var n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:void 0;i(this,t),this.root_=e;for(var r=arguments.length,a=Array(r>2?r-2:0),o=2;o<r;o++)a[o-2]=arguments[o];this.initialize.apply(this,a),this.foundation_=void 0===n?this.getDefaultFoundation():n,this.foundation_.init(),this.initialSyncWithDOM()}return a(t,null,[{key:"attachTo",value:function(e){return new t(e,new r.a)}}]),a(t,[{key:"initialize",value:function(){}},{key:"getDefaultFoundation",value:function(){throw new Error("Subclasses must override getDefaultFoundation to return a properly configured foundation class")}},{key:"initialSyncWithDOM",value:function(){}},{key:"destroy",value:function(){this.foundation_.destroy()}},{key:"listen",value:function(t,e){this.root_.addEventListener(t,e)}},{key:"unlisten",value:function(t,e){this.root_.removeEventListener(t,e)}},{key:"emit",value:function(t,e){var n=arguments.length>2&&void 0!==arguments[2]&&arguments[2],i=void 0;"function"==typeof CustomEvent?i=new CustomEvent(t,{detail:e,bubbles:n}):(i=document.createEvent("CustomEvent"),i.initCustomEvent(t,n,!1,e)),this.root_.dispatchEvent(i)}}]),t}();e.a=o},28:function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0});var i=n(17);n.d(e,"MDCTabFoundation",function(){return i.a}),n.d(e,"MDCTab",function(){return i.b});var r=n(57);n.d(e,"MDCTabBarFoundation",function(){return r.a}),n.d(e,"MDCTabBar",function(){return r.b})},3:function(t,e,n){"use strict";function i(t){if(t.CSS&&"function"==typeof t.CSS.supports){var e=t.CSS.supports("--css-vars","yes"),n=t.CSS.supports("(--css-vars: yes)")&&t.CSS.supports("color","#00000000");return e||n}}function r(t){return["webkitMatchesSelector","msMatchesSelector","matches"].filter(function(e){return e in t}).pop()}function a(t,e,n){var i=e.x,r=e.y,a=i+n.left,o=r+n.top,u=void 0,s=void 0;return"touchstart"===t.type?(u=t.changedTouches[0].pageX-a,s=t.changedTouches[0].pageY-o):(u=t.pageX-a,s=t.pageY-o),{x:u,y:s}}e.b=i,e.a=r,e.c=a},4:function(t,e,n){"use strict";function i(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}function r(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return!e||"object"!=typeof e&&"function"!=typeof e?t:e}function a(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e)}Object.defineProperty(e,"__esModule",{value:!0});var o=n(0),u=n(6),s=n(3);n.d(e,"MDCRippleFoundation",function(){return u.a}),n.d(e,"MDCRipple",function(){return f});var c=function(){function t(t,e){for(var n=0;n<e.length;n++){var i=e[n];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(t,i.key,i)}}return function(e,n,i){return n&&t(e.prototype,n),i&&t(e,i),e}}(),f=function(t){function e(){return i(this,e),r(this,(e.__proto__||Object.getPrototypeOf(e)).apply(this,arguments))}return a(e,t),c(e,[{key:"activate",value:function(){this.foundation_.activate()}},{key:"deactivate",value:function(){this.foundation_.deactivate()}},{key:"getDefaultFoundation",value:function(){return new u.a(e.createAdapter(this))}},{key:"initialSyncWithDOM",value:function(){this.unbounded="mdcRippleIsUnbounded"in this.root_.dataset}},{key:"unbounded",get:function(){return this.unbounded_},set:function(t){var e=u.a.cssClasses.UNBOUNDED;this.unbounded_=Boolean(t),this.unbounded_?this.root_.classList.add(e):this.root_.classList.remove(e)}}],[{key:"attachTo",value:function(t){var n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{},i=n.isUnbounded,r=void 0===i?void 0:i,a=new e(t);return void 0!==r&&(a.unbounded=r),a}},{key:"createAdapter",value:function(t){var e=n.i(s.a)(HTMLElement.prototype);return{browserSupportsCssVars:function(){return n.i(s.b)(window)},isUnbounded:function(){return t.unbounded},isSurfaceActive:function(){return t.root_[e](":active")},isSurfaceDisabled:function(){return t.disabled},addClass:function(e){return t.root_.classList.add(e)},removeClass:function(e){return t.root_.classList.remove(e)},registerInteractionHandler:function(e,n){return t.root_.addEventListener(e,n)},deregisterInteractionHandler:function(e,n){return t.root_.removeEventListener(e,n)},registerResizeHandler:function(t){return window.addEventListener("resize",t)},deregisterResizeHandler:function(t){return window.removeEventListener("resize",t)},updateCssVariable:function(e,n){return t.root_.style.setProperty(e,n)},computeBoundingRect:function(){return t.root_.getBoundingClientRect()},getWindowPageOffset:function(){return{x:window.pageXOffset,y:window.pageYOffset}}}}}]),e}(o.MDCComponent)},5:function(t,e,n){"use strict";n.d(e,"a",function(){return i}),n.d(e,"b",function(){return r}),n.d(e,"c",function(){return a});var i={ROOT:"mdc-ripple-upgraded",UNBOUNDED:"mdc-ripple-upgraded--unbounded",BG_FOCUSED:"mdc-ripple-upgraded--background-focused",BG_ACTIVE_FILL:"mdc-ripple-upgraded--background-active-fill",FG_ACTIVATION:"mdc-ripple-upgraded--foreground-activation",FG_DEACTIVATION:"mdc-ripple-upgraded--foreground-deactivation"},r={VAR_SURFACE_WIDTH:"--mdc-ripple-surface-width",VAR_SURFACE_HEIGHT:"--mdc-ripple-surface-height",VAR_FG_SIZE:"--mdc-ripple-fg-size",VAR_LEFT:"--mdc-ripple-left",VAR_TOP:"--mdc-ripple-top",VAR_FG_SCALE:"--mdc-ripple-fg-scale",VAR_FG_TRANSLATE_START:"--mdc-ripple-fg-translate-start",VAR_FG_TRANSLATE_END:"--mdc-ripple-fg-translate-end"},a={PADDING:10,INITIAL_ORIGIN_SCALE:.6,DEACTIVATION_TIMEOUT_MS:300}},56:function(t,e,n){"use strict";function i(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}function r(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return!e||"object"!=typeof e&&"function"!=typeof e?t:e}function a(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e)}var o=n(1),u=n(7),s=n(15),c=Object.assign||function(t){for(var e=1;e<arguments.length;e++){var n=arguments[e];for(var i in n)Object.prototype.hasOwnProperty.call(n,i)&&(t[i]=n[i])}return t},f=function(){function t(t,e){for(var n=0;n<e.length;n++){var i=e[n];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(t,i.key,i)}}return function(e,n,i){return n&&t(e.prototype,n),i&&t(e,i),e}}(),d=function(t){function e(t){i(this,e);var n=r(this,(e.__proto__||Object.getPrototypeOf(e)).call(this,c(e.defaultAdapter,t)));return n.isIndicatorShown_=!1,n.computedWidth_=0,n.computedLeft_=0,n.activeTabIndex_=0,n.layoutFrame_=0,n.resizeHandler_=function(){return n.layout()},n}return a(e,t),f(e,null,[{key:"cssClasses",get:function(){return s.b}},{key:"strings",get:function(){return s.a}},{key:"defaultAdapter",get:function(){return{addClass:function(){},removeClass:function(){},bindOnMDCTabSelectedEvent:function(){},unbindOnMDCTabSelectedEvent:function(){},registerResizeHandler:function(){},deregisterResizeHandler:function(){},getOffsetWidth:function(){return 0},setStyleForIndicator:function(){},getOffsetWidthForIndicator:function(){return 0},notifyChange:function(){},getNumberOfTabs:function(){return 0},isTabActiveAtIndex:function(){return!1},setTabActiveAtIndex:function(){},isDefaultPreventedOnClickForTabAtIndex:function(){return!1},setPreventDefaultOnClickForTabAtIndex:function(){},measureTabAtIndex:function(){},getComputedWidthForTabAtIndex:function(){return 0},getComputedLeftForTabAtIndex:function(){return 0}}}}]),f(e,[{key:"init",value:function(){this.adapter_.addClass(s.b.UPGRADED),this.adapter_.bindOnMDCTabSelectedEvent(),this.adapter_.registerResizeHandler(this.resizeHandler_);var t=this.findActiveTabIndex_();t>=0&&(this.activeTabIndex_=t),this.layout()}},{key:"destroy",value:function(){this.adapter_.removeClass(s.b.UPGRADED),this.adapter_.unbindOnMDCTabSelectedEvent(),this.adapter_.deregisterResizeHandler(this.resizeHandler_)}},{key:"layoutInternal_",value:function(){var t=this;this.forEachTabIndex_(function(e){return t.adapter_.measureTabAtIndex(e)}),this.computedWidth_=this.adapter_.getOffsetWidth(),this.layoutIndicator_()}},{key:"layoutIndicator_",value:function(){var t=!this.isIndicatorShown_;t&&this.adapter_.setStyleForIndicator("transition","none");var e=this.adapter_.getComputedLeftForTabAtIndex(this.activeTabIndex_),i=this.adapter_.getComputedWidthForTabAtIndex(this.activeTabIndex_)/this.adapter_.getOffsetWidth(),r="translateX("+e+"px) scale("+i+", 1)";this.adapter_.setStyleForIndicator(n.i(u.getCorrectPropertyName)(window,"transform"),r),t&&(this.adapter_.getOffsetWidthForIndicator(),this.adapter_.setStyleForIndicator("transition",""),this.adapter_.setStyleForIndicator("visibility","visible"),this.isIndicatorShown_=!0)}},{key:"findActiveTabIndex_",value:function(){var t=this,e=-1;return this.forEachTabIndex_(function(n){if(t.adapter_.isTabActiveAtIndex(n))return e=n,!0}),e}},{key:"forEachTabIndex_",value:function(t){for(var e=this.adapter_.getNumberOfTabs(),n=0;n<e;n++){if(t(n))break}}},{key:"layout",value:function(){var t=this;this.layoutFrame_&&cancelAnimationFrame(this.layoutFrame_),this.layoutFrame_=requestAnimationFrame(function(){t.layoutInternal_(),t.layoutFrame_=0})}},{key:"switchToTabAtIndex",value:function(t,e){var n=this;if(t!==this.activeTabIndex_){if(t<0||t>=this.adapter_.getNumberOfTabs())throw new Error("Out of bounds index specified for tab: "+t);var i=this.activeTabIndex_;this.activeTabIndex_=t,requestAnimationFrame(function(){i>=0&&n.adapter_.setTabActiveAtIndex(i,!1),n.adapter_.setTabActiveAtIndex(n.activeTabIndex_,!0),n.layoutIndicator_(),e&&n.adapter_.notifyChange({activeTabIndex:n.activeTabIndex_})})}}},{key:"getActiveTabIndex",value:function(){return this.findActiveTabIndex_()}}]),e}(o.a);e.a=d},57:function(t,e,n){"use strict";function i(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}function r(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return!e||"object"!=typeof e&&"function"!=typeof e?t:e}function a(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e)}var o=n(2),u=n(17),s=n(15),c=n(56);n.d(e,"a",function(){return c.a}),n.d(e,"b",function(){return d});var f=function(){function t(t,e){for(var n=0;n<e.length;n++){var i=e[n];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(t,i.key,i)}}return function(e,n,i){return n&&t(e.prototype,n),i&&t(e,i),e}}(),d=function(t){function e(){return i(this,e),r(this,(e.__proto__||Object.getPrototypeOf(e)).apply(this,arguments))}return a(e,t),f(e,[{key:"initialize",value:function(){var t=this,e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:function(t){return new u.b(t)};this.indicator_=this.root_.querySelector(s.a.INDICATOR_SELECTOR),this.tabs_=this.gatherTabs_(e),this.tabSelectedHandler_=function(e){var n=e.detail,i=n.tab;t.setActiveTab_(i,!0)}}},{key:"getDefaultFoundation",value:function(){var t=this;return new c.a({addClass:function(e){return t.root_.classList.add(e)},removeClass:function(e){return t.root_.classList.remove(e)},bindOnMDCTabSelectedEvent:function(){return t.listen("MDCTab:selected",t.tabSelectedHandler_)},unbindOnMDCTabSelectedEvent:function(){return t.unlisten("MDCTab:selected",t.tabSelectedHandler_)},registerResizeHandler:function(t){return window.addEventListener("resize",t)},deregisterResizeHandler:function(t){return window.removeEventListener("resize",t)},getOffsetWidth:function(){return t.root_.offsetWidth},setStyleForIndicator:function(e,n){return t.indicator_.style.setProperty(e,n)},getOffsetWidthForIndicator:function(){return t.indicator_.offsetWidth},notifyChange:function(e){return t.emit("MDCTabBar:change",e)},getNumberOfTabs:function(){return t.tabs.length},isTabActiveAtIndex:function(e){return t.tabs[e].isActive},setTabActiveAtIndex:function(e,n){t.tabs[e].isActive=n},isDefaultPreventedOnClickForTabAtIndex:function(e){return t.tabs[e].preventDefaultOnClick},setPreventDefaultOnClickForTabAtIndex:function(e,n){t.tabs[e].preventDefaultOnClick=n},measureTabAtIndex:function(e){return t.tabs[e].measureSelf()},getComputedWidthForTabAtIndex:function(e){return t.tabs[e].computedWidth},getComputedLeftForTabAtIndex:function(e){return t.tabs[e].computedLeft}})}},{key:"gatherTabs_",value:function(t){return[].slice.call(this.root_.querySelectorAll(s.a.TAB_SELECTOR)).map(function(e){return t(e)})}},{key:"setActiveTabIndex_",value:function(t,e){this.foundation_.switchToTabAtIndex(t,e)}},{key:"layout",value:function(){this.foundation_.layout()}},{key:"setActiveTab_",value:function(t,e){var n=this.tabs.indexOf(t);if(n<0)throw new Error("Invalid tab component given as activeTab: Tab not found within this component's tab list");this.setActiveTabIndex_(n,e)}},{key:"tabs",get:function(){return this.tabs_}},{key:"activeTab",get:function(){var t=this.foundation_.getActiveTabIndex();return this.tabs[t]},set:function(t){this.setActiveTab_(t,!1)}},{key:"activeTabIndex",get:function(){return this.foundation_.getActiveTabIndex()},set:function(t){this.setActiveTabIndex_(t,!1)}}],[{key:"attachTo",value:function(t){return new e(t)}}]),e}(o.a)},58:function(t,e,n){"use strict";function i(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}function r(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return!e||"object"!=typeof e&&"function"!=typeof e?t:e}function a(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e)}var o=n(16),u=n(1),s=Object.assign||function(t){for(var e=1;e<arguments.length;e++){var n=arguments[e];for(var i in n)Object.prototype.hasOwnProperty.call(n,i)&&(t[i]=n[i])}return t},c=function(){function t(t,e){for(var n=0;n<e.length;n++){var i=e[n];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(t,i.key,i)}}return function(e,n,i){return n&&t(e.prototype,n),i&&t(e,i),e}}(),f=function(t){function e(){var t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{};i(this,e);var n=r(this,(e.__proto__||Object.getPrototypeOf(e)).call(this,s(e.defaultAdapter,t)));return n.computedWidth_=0,n.computedLeft_=0,n.isActive_=!1,n.preventDefaultOnClick_=!1,n.clickHandler_=function(t){n.preventDefaultOnClick_&&t.preventDefault(),n.adapter_.notifySelected()},n.keydownHandler_=function(t){(t.key&&"Enter"===t.key||13===t.keyCode)&&n.adapter_.notifySelected()},n}return a(e,t),c(e,null,[{key:"cssClasses",get:function(){return o.a}},{key:"defaultAdapter",get:function(){return{addClass:function(){},removeClass:function(){},registerInteractionHandler:function(){},deregisterInteractionHandler:function(){},getOffsetWidth:function(){return 0},getOffsetLeft:function(){return 0},notifySelected:function(){}}}}]),c(e,[{key:"init",value:function(){this.adapter_.registerInteractionHandler("click",this.clickHandler_),this.adapter_.registerInteractionHandler("keydown",this.keydownHandler_)}},{key:"destroy",value:function(){this.adapter_.deregisterInteractionHandler("click",this.clickHandler_),this.adapter_.deregisterInteractionHandler("keydown",this.keydownHandler_)}},{key:"getComputedWidth",value:function(){return this.computedWidth_}},{key:"getComputedLeft",value:function(){return this.computedLeft_}},{key:"isActive",value:function(){return this.isActive_}},{key:"setActive",value:function(t){this.isActive_=t,this.isActive_?this.adapter_.addClass(o.a.ACTIVE):this.adapter_.removeClass(o.a.ACTIVE)}},{key:"preventsDefaultOnClick",value:function(){return this.preventDefaultOnClick_}},{key:"setPreventDefaultOnClick",value:function(t){this.preventDefaultOnClick_=t}},{key:"measureSelf",value:function(){this.computedWidth_=this.adapter_.getOffsetWidth(),this.computedLeft_=this.adapter_.getOffsetLeft()}}]),e}(u.a);e.a=f},6:function(t,e,n){"use strict";function i(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}function r(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return!e||"object"!=typeof e&&"function"!=typeof e?t:e}function a(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e)}var o=n(0),u=n(5),s=n(3),c=Object.assign||function(t){for(var e=1;e<arguments.length;e++){var n=arguments[e];for(var i in n)Object.prototype.hasOwnProperty.call(n,i)&&(t[i]=n[i])}return t},f=function(){function t(t,e){for(var n=0;n<e.length;n++){var i=e[n];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(t,i.key,i)}}return function(e,n,i){return n&&t(e.prototype,n),i&&t(e,i),e}}(),d={mouseup:"mousedown",pointerup:"pointerdown",touchend:"touchstart",keyup:"keydown",blur:"focus"},l=function(t){function e(t){i(this,e);var n=r(this,(e.__proto__||Object.getPrototypeOf(e)).call(this,c(e.defaultAdapter,t)));return n.layoutFrame_=0,n.frame_={width:0,height:0},n.activationState_=n.defaultActivationState_(),n.xfDuration_=0,n.initialSize_=0,n.maxRadius_=0,n.listenerInfos_=[{activate:"touchstart",deactivate:"touchend"},{activate:"pointerdown",deactivate:"pointerup"},{activate:"mousedown",deactivate:"mouseup"},{activate:"keydown",deactivate:"keyup"},{focus:"focus",blur:"blur"}],n.listeners_={activate:function(t){return n.activate_(t)},deactivate:function(t){return n.deactivate_(t)},focus:function(){return requestAnimationFrame(function(){return n.adapter_.addClass(e.cssClasses.BG_FOCUSED)})},blur:function(){return requestAnimationFrame(function(){return n.adapter_.removeClass(e.cssClasses.BG_FOCUSED)})}},n.resizeHandler_=function(){return n.layout()},n.unboundedCoords_={left:0,top:0},n.fgScale_=0,n.activationTimer_=0,n.activationAnimationHasEnded_=!1,n.activationTimerCallback_=function(){n.activationAnimationHasEnded_=!0,n.runDeactivationUXLogicIfReady_()},n}return a(e,t),f(e,[{key:"isSupported_",get:function(){return this.adapter_.browserSupportsCssVars()}}],[{key:"cssClasses",get:function(){return u.a}},{key:"strings",get:function(){return u.b}},{key:"numbers",get:function(){return u.c}},{key:"defaultAdapter",get:function(){return{browserSupportsCssVars:function(){},isUnbounded:function(){},isSurfaceActive:function(){},isSurfaceDisabled:function(){},addClass:function(){},removeClass:function(){},registerInteractionHandler:function(){},deregisterInteractionHandler:function(){},registerResizeHandler:function(){},deregisterResizeHandler:function(){},updateCssVariable:function(){},computeBoundingRect:function(){},getWindowPageOffset:function(){}}}}]),f(e,[{key:"defaultActivationState_",value:function(){return{isActivated:!1,hasDeactivationUXRun:!1,wasActivatedByPointer:!1,wasElementMadeActive:!1,activationStartTime:0,activationEvent:null,isProgrammatic:!1}}},{key:"init",value:function(){var t=this;if(this.isSupported_){this.addEventListeners_();var n=e.cssClasses,i=n.ROOT,r=n.UNBOUNDED;requestAnimationFrame(function(){t.adapter_.addClass(i),t.adapter_.isUnbounded()&&t.adapter_.addClass(r),t.layoutInternal_()})}}},{key:"addEventListeners_",value:function(){var t=this;this.listenerInfos_.forEach(function(e){Object.keys(e).forEach(function(n){t.adapter_.registerInteractionHandler(e[n],t.listeners_[n])})}),this.adapter_.registerResizeHandler(this.resizeHandler_)}},{key:"activate_",value:function(t){var e=this;if(!this.adapter_.isSurfaceDisabled()){var n=this.activationState_;n.isActivated||(n.isActivated=!0,n.isProgrammatic=null===t,n.activationEvent=t,n.wasActivatedByPointer=!n.isProgrammatic&&("mousedown"===t.type||"touchstart"===t.type||"pointerdown"===t.type),n.activationStartTime=Date.now(),requestAnimationFrame(function(){n.wasElementMadeActive=!t||"keydown"!==t.type||e.adapter_.isSurfaceActive(),n.wasElementMadeActive?e.animateActivation_():e.activationState_=e.defaultActivationState_()}))}}},{key:"activate",value:function(){this.activate_(null)}},{key:"animateActivation_",value:function(){var t=this,n=e.strings,i=n.VAR_FG_TRANSLATE_START,r=n.VAR_FG_TRANSLATE_END,a=e.cssClasses,o=a.BG_ACTIVE_FILL,u=a.FG_DEACTIVATION,s=a.FG_ACTIVATION,c=e.numbers.DEACTIVATION_TIMEOUT_MS,f="",d="";if(!this.adapter_.isUnbounded()){var l=this.getFgTranslationCoordinates_(),p=l.startPoint,v=l.endPoint;f=p.x+"px, "+p.y+"px",d=v.x+"px, "+v.y+"px"}this.adapter_.updateCssVariable(i,f),this.adapter_.updateCssVariable(r,d),clearTimeout(this.activationTimer_),this.rmBoundedActivationClasses_(),this.adapter_.removeClass(u),this.adapter_.computeBoundingRect(),this.adapter_.addClass(o),this.adapter_.addClass(s),this.activationTimer_=setTimeout(function(){return t.activationTimerCallback_()},c)}},{key:"getFgTranslationCoordinates_",value:function(){var t=this.activationState_,e=t.activationEvent,i=t.wasActivatedByPointer,r=void 0;return r=i?n.i(s.c)(e,this.adapter_.getWindowPageOffset(),this.adapter_.computeBoundingRect()):{x:this.frame_.width/2,y:this.frame_.height/2},r={x:r.x-this.initialSize_/2,y:r.y-this.initialSize_/2},{startPoint:r,endPoint:{x:this.frame_.width/2-this.initialSize_/2,y:this.frame_.height/2-this.initialSize_/2}}}},{key:"runDeactivationUXLogicIfReady_",value:function(){var t=e.cssClasses.FG_DEACTIVATION,n=this.activationState_,i=n.hasDeactivationUXRun,r=n.isActivated;(i||!r)&&this.activationAnimationHasEnded_&&(this.rmBoundedActivationClasses_(),this.adapter_.addClass(t))}},{key:"rmBoundedActivationClasses_",value:function(){var t=e.cssClasses,n=t.BG_ACTIVE_FILL,i=t.FG_ACTIVATION;this.adapter_.removeClass(n),this.adapter_.removeClass(i),this.activationAnimationHasEnded_=!1,this.adapter_.computeBoundingRect()}},{key:"deactivate_",value:function(t){var e=this,n=this.activationState_;if(n.isActivated){if(n.isProgrammatic){return requestAnimationFrame(function(){return e.animateDeactivation_(null,c({},n))}),void(this.activationState_=this.defaultActivationState_())}var i=d[t.type],r=n.activationEvent.type,a=i===r,o=a;n.wasActivatedByPointer&&(o="mouseup"===t.type);var u=c({},n);requestAnimationFrame(function(){a&&(e.activationState_.hasDeactivationUXRun=!0,e.animateDeactivation_(t,u)),o&&(e.activationState_=e.defaultActivationState_())})}}},{key:"deactivate",value:function(){this.deactivate_(null)}},{key:"animateDeactivation_",value:function(t,n){var i=n.wasActivatedByPointer,r=n.wasElementMadeActive,a=e.cssClasses.BG_FOCUSED;(i||r)&&(this.adapter_.removeClass(a),this.runDeactivationUXLogicIfReady_())}},{key:"destroy",value:function(){var t=this;if(this.isSupported_){this.removeEventListeners_();var n=e.cssClasses,i=n.ROOT,r=n.UNBOUNDED;requestAnimationFrame(function(){t.adapter_.removeClass(i),t.adapter_.removeClass(r),t.removeCssVars_()})}}},{key:"removeEventListeners_",value:function(){var t=this;this.listenerInfos_.forEach(function(e){Object.keys(e).forEach(function(n){t.adapter_.deregisterInteractionHandler(e[n],t.listeners_[n])})}),this.adapter_.deregisterResizeHandler(this.resizeHandler_)}},{key:"removeCssVars_",value:function(){var t=this,n=e.strings;Object.keys(n).forEach(function(e){0===e.indexOf("VAR_")&&t.adapter_.updateCssVariable(n[e],null)})}},{key:"layout",value:function(){var t=this;this.layoutFrame_&&cancelAnimationFrame(this.layoutFrame_),this.layoutFrame_=requestAnimationFrame(function(){t.layoutInternal_(),t.layoutFrame_=0})}},{key:"layoutInternal_",value:function(){this.frame_=this.adapter_.computeBoundingRect();var t=Math.max(this.frame_.height,this.frame_.width),n=Math.sqrt(Math.pow(this.frame_.width,2)+Math.pow(this.frame_.height,2));this.initialSize_=t*e.numbers.INITIAL_ORIGIN_SCALE,this.maxRadius_=n+e.numbers.PADDING,this.fgScale_=this.maxRadius_/this.initialSize_,this.xfDuration_=1e3*Math.sqrt(this.maxRadius_/1024),this.updateLayoutCssVars_()}},{key:"updateLayoutCssVars_",value:function(){var t=e.strings,n=t.VAR_SURFACE_WIDTH,i=t.VAR_SURFACE_HEIGHT,r=t.VAR_FG_SIZE,a=t.VAR_LEFT,o=t.VAR_TOP,u=t.VAR_FG_SCALE;this.adapter_.updateCssVariable(n,this.frame_.width+"px"),this.adapter_.updateCssVariable(i,this.frame_.height+"px"),this.adapter_.updateCssVariable(r,this.initialSize_+"px"),this.adapter_.updateCssVariable(u,this.fgScale_),this.adapter_.isUnbounded()&&(this.unboundedCoords_={left:Math.round(this.frame_.width/2-this.initialSize_/2),top:Math.round(this.frame_.height/2-this.initialSize_/2)},this.adapter_.updateCssVariable(a,this.unboundedCoords_.left+"px"),this.adapter_.updateCssVariable(o,this.unboundedCoords_.top+"px"))}}]),e}(o.MDCFoundation);e.a=l},7:function(t,e,n){"use strict";function i(t){return void 0!==t.document&&"function"==typeof t.document.createElement}function r(t){return t in c||t in f}function a(t,e,n){return e[t].styleProperty in n.style?e[t].noPrefix:e[t].webkitPrefix}function o(t,e){if(!i(t)||!r(e))return e;var n=e in c?c:f,o=t.document.createElement("div");return n===c?a(e,n,o):n[e].noPrefix in o.style?n[e].noPrefix:n[e].webkitPrefix}function u(t,e){return o(t,e)}function s(t,e){return o(t,e)}Object.defineProperty(e,"__esModule",{value:!0}),e.getCorrectEventName=u,e.getCorrectPropertyName=s;var c={animationstart:{noPrefix:"animationstart",webkitPrefix:"webkitAnimationStart",styleProperty:"animation"},animationend:{noPrefix:"animationend",webkitPrefix:"webkitAnimationEnd",styleProperty:"animation"},animationiteration:{noPrefix:"animationiteration",webkitPrefix:"webkitAnimationIteration",styleProperty:"animation"},transitionend:{noPrefix:"transitionend",webkitPrefix:"webkitTransitionEnd",styleProperty:"transition"}},f={animation:{noPrefix:"animation",webkitPrefix:"-webkit-animation"},transform:{noPrefix:"transform",webkitPrefix:"-webkit-transform"},transition:{noPrefix:"transition",webkitPrefix:"-webkit-transition"}}},80:function(t,e,n){t.exports=n(28)}})});
 },{}],4:[function(require,module,exports){
 /*!
  Material Components for the web
@@ -1060,4 +1128,4 @@ module.exports = {
  License: Apache-2.0
 */
 !function(t,e){"object"==typeof exports&&"object"==typeof module?module.exports=e():"function"==typeof define&&define.amd?define([],e):"object"==typeof exports?exports.autoInit=e():(t.mdc=t.mdc||{},t.mdc.autoInit=e())}(this,function(){return function(t){function e(o){if(n[o])return n[o].exports;var r=n[o]={i:o,l:!1,exports:{}};return t[o].call(r.exports,r,r.exports,e),r.l=!0,r.exports}var n={};return e.m=t,e.c=n,e.i=function(t){return t},e.d=function(t,n,o){e.o(t,n)||Object.defineProperty(t,n,{configurable:!1,enumerable:!0,get:o})},e.n=function(t){var n=t&&t.__esModule?function(){return t.default}:function(){return t};return e.d(n,"a",n),n},e.o=function(t,e){return Object.prototype.hasOwnProperty.call(t,e)},e.p="/assets/",e(e.s=67)}({18:function(t,e,n){"use strict";function o(){for(var t,e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:document,n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:i,o=e.querySelectorAll("[data-mdc-auto-init]"),u=0;t=o[u];u++){var c=t.dataset.mdcAutoInit;if(!c)throw new Error("(mdc-auto-init) Constructor name must be given.");var a=r[c];if("function"!=typeof a)throw new Error("(mdc-auto-init) Could not find constructor in registry for "+c);if(t[c])n("(mdc-auto-init) Component already initialized for "+t+". Skipping...");else{var f=a.attachTo(t);Object.defineProperty(t,c,{value:f,writable:!1,enumerable:!1,configurable:!0})}}}Object.defineProperty(e,"__esModule",{value:!0}),e.default=o;var r=Object.create(null),i=console.warn.bind(console);o.register=function(t,e){var n=arguments.length>2&&void 0!==arguments[2]?arguments[2]:i;if("function"!=typeof e)throw new Error("(mdc-auto-init) Invalid Ctor value "+e+". Expected function");r[t]&&n("(mdc-auto-init) Overriding registration for "+t+" with "+e+". Was: "+r[t]),r[t]=e},o.deregister=function(t){delete r[t]},o.deregisterAll=function(){Object.keys(r).forEach(this.deregister,this)}},67:function(t,e,n){t.exports=n(18)}})});
-},{}]},{},[13]);
+},{}]},{},[14]);

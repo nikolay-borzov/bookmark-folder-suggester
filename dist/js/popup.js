@@ -1,4 +1,4 @@
-require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({14:[function(require,module,exports){
+require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({15:[function(require,module,exports){
 'use strict';
 
 const constants = require('constants');
@@ -23,7 +23,7 @@ let currentTab = {
 /**
  * Current bookmark if set
  */
-let bookmark = null;
+let currentBookmark = null;
 
 /** DOM elements */
 let elements = {
@@ -45,44 +45,39 @@ let helpers = {
   /**
    * Searches bookmark by URL
    * @param {string} url
-   * @return {Promise}
+   * @return {Promise.<Object>}
    */
   getBookmarkByUrl(url) {
     return new Promise(resolve => {
       chrome.bookmarks.search({ url: url }, treeNodes => {
-        // Keep the bookmark
-        bookmark = treeNodes[0] || null;
-        resolve(bookmark);
+        resolve(treeNodes[0] || null);
       });
     });
   },
 
   /**
    * @param {string} folderId
-   * @return {Promise}
+   * @return {Promise.<BookmarkTreeNode>}
    */
-  createBookmark(folderId) {
+  createBookmark(folderId, bookmark) {
     return new Promise(resolve => {
       // Move the bookmark if it was created before
       if (bookmark) {
         chrome.bookmarks.move(bookmark.id, {
           parentId: folderId
-        }, treeNode => {
-          // Keep the bookmark
-          bookmark = treeNode;
-          resolve();
-        });
+        }, resolve);
       } else {
         chrome.bookmarks.create({
           url: currentTab.url,
           title: currentTab.title,
           parentId: folderId,
-        }, treeNode => {
-          // Keep the bookmark in case we need to move it later
-          bookmark = treeNode;
-          resolve();
-        });
+        }, resolve);
       }
+    }).then(newBookmark => {
+      // Keep bookmark
+      currentBookmark = newBookmark;
+
+      return newBookmark;
     });
   },
 
@@ -90,13 +85,10 @@ let helpers = {
    * Removes previously added bookmark
    * @return {Promise}
    */
-  removeBookmark() {
+  removeBookmark(bookmark) {
     return new Promise(resolve => {
       if (bookmark) {
-        chrome.bookmarks.remove(bookmark.id, () => {
-          resolve();
-          bookmark = null;
-        });
+        chrome.bookmarks.remove(bookmark.id, resolve);
       } else {
         resolve();
       }
@@ -119,8 +111,9 @@ let render = {
   /**
    * Matched rules
    * @param {Array.<Rule>} rules
+   * @param {BookmarkTreeNode} bookmark
    */
-  suggestions(rules) {
+  suggestions(rules, bookmark) {
     if (!rules.length) {
       helpers.setState('no-match');
 
@@ -201,16 +194,20 @@ let actions = {
   /**
    * Creates a bookmark inside selected folder for current tab
    * @param {Event} event
+   * @param {BookmarkTreeNode} bookmark
    */
-  bookmarkSuggestion(event) {
+  bookmarkSuggestion(event, bookmark) {
     let row = event.target.closest('.js-suggestion-row');
     let folderId = row.dataset.folderId;
 
     if (row.classList.contains('is-selected')) {
-      helpers.removeBookmark()
-        .then(() => row.classList.remove('is-selected'));
+      helpers.removeBookmark(currentBookmark)
+        .then(() => {
+          row.classList.remove('is-selected');
+          currentBookmark = null;
+        });
     } else {
-      helpers.createBookmark(folderId)
+      helpers.createBookmark(folderId, bookmark)
         .then(() => {
           // Clear selection
           $$('.js-suggestion-row', elements.suggestionsContainer)
@@ -223,11 +220,9 @@ let actions = {
 
   /**
    * Adds rule using current tab's data
-   * @param {Event} event
+   * @param {BookmarkTreeNode} bookmark
    */
-  addRule(event) {
-    event.preventDefault();
-
+  addRule(bookmark) {
     let message = { currentTab };
 
     if (bookmark) {
@@ -251,15 +246,15 @@ let actions = {
 
 $.ready().then(() => {
   elements.suggestionsContainer = document.getElementById('suggestions');
-  elements.body = document.getElementsByTagName('body')[0];
+  elements.body = document.body;
 
   let addRuleLink = document.getElementById('add-rule-button');
-  addRuleLink.addEventListener('click', actions.addRule);
+  addRuleLink.addEventListener('click', () => actions.addRule());
 
   $.delegate(elements.suggestionsContainer,
              'click',
              '.js-suggestion-row',
-             actions.bookmarkSuggestion);
+             (event) => actions.bookmarkSuggestion(event, currentBookmark));
 
   getCurrentTab().then(tab => {
     // Keep current tab info
@@ -267,12 +262,23 @@ $.ready().then(() => {
 
     Promise.all([
       rulesEngine.match({ url: tab.url, title: tab.title }),
-      helpers.getBookmarkByUrl(tab.url)
-    ]).then(results => {
-      let rules = results[0];
-      render.suggestions(rules);
+      helpers.getBookmarkByUrl(tab.url),
+      settings.get('autoBookmark')
+    ]).then(([rules, bookmark, { autoBookmark: autoBookmark }]) => {
+      // Keep current page bookmark
+      currentBookmark = bookmark;
+
+      // Auto Bookmark first suggestion
+      if (rules.length && !bookmark && autoBookmark) {
+        helpers.createBookmark(rules[0].folder.id, bookmark)
+          .then((newBookmark) => {
+            render.suggestions(rules, newBookmark);
+          });
+      } else {
+        render.suggestions(rules, bookmark);
+      }
     });
   });
 });
 
-},{"constants":6,"dom-helper":7,"rules-engine":9,"settings":10}]},{},[14]);
+},{"constants":7,"dom-helper":8,"rules-engine":10,"settings":11}]},{},[15]);

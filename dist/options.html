@@ -9,15 +9,136 @@
 </head>
 
 <body class="mdc-typography">
+  <header class="mdc-toolbar mdc-toolbar--fixed">
+    <div class="mdc-toolbar__row mdc-toolbar__row--fluid-height mdc-toolbar__row--dense">
+      <section class="mdc-toolbar__section mdc-toolbar__section--align-start mdc-toolbar__section--shrink-to-fit">
+        <button id="export-button" type="button"
+                class="mdc-button mdc-button--icon-align mdc-button--compact"
+                title="Export settings to file">
+          <svg class="icon">
+            <use xmlns:xlink="http://www.w3.org/1999/xlink"
+                 xlink:href="icons.svg#download"></use>
+          </svg>
+          Export
+        </button>
+
+        <button id="import-button" type="button"
+                class="mdc-button mdc-button--icon-align mdc-button--compact"
+                title="Import settings from file">
+          <svg class="icon">
+            <use xmlns:xlink="http://www.w3.org/1999/xlink"
+                 xlink:href="icons.svg#upload"></use>
+          </svg>
+          Import
+        </button>
+        <input type="file" id="import-file-input" accept=".json" style="display:none">
+
+        <button id="help-button" type="button"
+                class="mdc-button mdc-button--icon"
+                title="Help" aria-label="Help">
+          <svg class="icon">
+            <use xmlns:xlink="http://www.w3.org/1999/xlink"
+                 xlink:href="icons.svg#help"></use>
+          </svg>
+          Import
+        </button>
+      </section>
+
+      <section class="mdc-toolbar__section">
+        <nav id="tabs-bar" class="mdc-tab-bar" role="tablist">
+          <a class="mdc-tab mdc-tab--active" role="tab">
+            Rules
+          </a>
+          <a class="mdc-tab" role="tab">
+            Other settings
+          </a>
+          <span class="mdc-tab-bar__indicator"></span>
+        </nav>
+      </section>
+
+      <section class="mdc-toolbar__section mdc-toolbar__section--align-end mdc-toolbar__section--shrink-to-fit">
+        <button id="save-button"
+                class="mdc-button mdc-button--compact mdc-button--icon-align"
+                type="button">
+          <svg class="icon">
+            <use xmlns:xlink="http://www.w3.org/1999/xlink"
+                 xlink:href="icons.svg#save"></use>
+          </svg>
+          Save
+        </button>
+      </section>
+    </div>
+  </header>
+
+  <main id="panels-container"
+        class="panels-container mdc-toolbar-fixed-adjust">
+    <div class="tab-panel is-active" role="tabpanel" aria-hidden="false">
+       <button id="add-rule-button"
+              class="add-rule-button mdc-fab"
+              title="Add Rule" aria-label="Add Rule">
+        <svg class="icon">
+          <use xmlns:xlink="http://www.w3.org/1999/xlink"
+               xlink:href="icons.svg#add"></use>
+        </svg>
+      </button>
+
+      <div id="rules-container" class="rules-container"></div>
+    </div>
+    <div class="tab-panel mdc-card other-settings-panel"
+         role="tabpanel" aria-hidden="true">
+      <div>
+        <div class="mdc-form-field">
+          <div class="mdc-checkbox">
+            <input type="checkbox" id="auto-bookmark-checkbox"
+                  class="mdc-checkbox__native-control"/>
+            <div class="mdc-checkbox__background">
+              <svg class="mdc-checkbox__checkmark" viewBox="0 0 24 24">
+                <path class="mdc-checkbox__checkmark__path"
+                      fill="none" stroke="white"
+                      d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
+              </svg>
+              <div class="mdc-checkbox__mixedmark"></div>
+            </div>
+          </div>
+          <label for="auto-bookmark-checkbox">Bookmark into first suggested folder</label>
+        </div>
+      </div>
+
+      <div class="storage-used-row">
+        <div class="mdc-form-field">
+          <label>Storage used:</label>
+        </div>
+        <div class="mdc-form-field storage-used-field">
+          <div class="progress">
+            <div id="storage-used-progress-bar" class="progress-bar">
+              <div id="storage-used-text" class="progress-label"></div>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="notification-bar" class="mdc-snackbar"
+       aria-live="assertive"
+       aria-atomic="true"
+       aria-hidden="true">
+    <div class="mdc-snackbar__text"></div>
+    <div class="mdc-snackbar__action-wrapper">
+      <button type="button"
+              class="mdc-button mdc-snackbar__action-button"></button>
+    </div>
+  </div>
+
   <aside id="bookmarks-tree-dialog"
-         style="visibility:hidden"
          class="mdc-dialog"
          role="alertdialog"
-         aria-labelledby="mdc-dialog-with-list-label"
+         aria-labelledby="bookmarks-tree-dialog-header"
          aria-describedby="bookmarks-tree">
     <div class="mdc-dialog__surface">
       <header class="mdc-dialog__header mdc-theme--primary-bg">
-        <h2 id="mdc-dialog-with-list-label"
+        <h2 id="bookmarks-tree-dialog-header"
             class="mdc-dialog__header__title">
           Select Bookmark Folder
         </h2>
@@ -40,75 +161,77 @@
     <div class="mdc-dialog__backdrop"></div>
   </aside>
 
-  <header class="mdc-toolbar mdc-toolbar--fixed _mdc-theme--dark">
-    <div class="mdc-toolbar__row mdc-toolbar__row--fluid-height mdc-toolbar__row--dense">
-      <section class="mdc-toolbar__section mdc-toolbar__section--align-start">
-        <butoon id="export-button" tabindex="0"
-                class="mdc-button mdc-button--compact mdc-button--icon-align"
-                title="Export settings to file"
-                type="button">
-          <svg class="icon">
-            <use xmlns:xlink="http://www.w3.org/1999/xlink"
-                 xlink:href="icons.svg#download"></use>
-          </svg>
-          Export
-        </butoon>
-        <butoon id="import-button" tabindex="0"
-                class="mdc-button mdc-button--compact mdc-button--icon-align"
-                title="Import settings from file"
-                type="button">
-          <svg class="icon">
-            <use xmlns:xlink="http://www.w3.org/1999/xlink"
-                 xlink:href="icons.svg#upload"></use>
-          </svg>
-          Import
-        </butoon>
-        <input type="file" id="import-file-input" accept=".json" style="display:none">
+  <aside id="help-dialog"
+         class="mdc-dialog"
+         role="alertdialog"
+         aria-labelledby="help-dialog-header"
+         aria-describedby="help-dialog-body">
+    <div class="mdc-dialog__surface">
+      <header class="mdc-dialog__header mdc-theme--primary-bg">
+        <h2 id="help-dialog-header"
+            class="mdc-dialog__header__title">
+          Help
+        </h2>
+      </header>
+      <section id="help-dialog-body"
+               class="mdc-dialog__body mdc-dialog__body--scrollable">
+        <h3 class="mdc-typography--subheading2">Create a rule</h3>
+        <ol>
+          <li>Click on FAB button (circle button with a plus sign)</li>
+          <li>Click on "Select folder" button and select bookmark folder</li>
+          <li>Specify one or more expressions:
+            <div class="mdc-theme--text-hint-on-light">
+              Expressions operation is a logical conjunction - expression are AND-ed. 
+            </div>
+            <ol>
+              <li>Set expression type - "URL starts with", "Title contains" and etc.</li>
+              <li>
+                Set expression value - URL or part of the URL or part of the Title
+                <div class="mdc-theme--text-hint-on-light">
+                  For example if you want to select any page with URL containing "JavaScript" and on "https://developer.mozilla.org" site - you need to set:
+                  <ul>
+                    <li>URL is on domain: "developer.mozilla.org"</li>
+                    <li>URL contains: "JavaScript"</li>
+                  </ul>
+                </div>
+                <div class="mdc-theme--text-hint-on-light">
+                  Expression value is case insensitive
+                </div>
+              </li>
+            </ol>
+          </li>
+        </ol>
+
+        <h3 class="mdc-typography--subheading2">Create a rule for current page</h3>
+        <p class="mdc-typography--body1">You can add a rule for current the page by clicking on "Add rule" button inside browse action popup.
+        Page title and url is copied to a new rule as expression values.
+        If the page is already bookmarked the bookmark's folder will be copied to rule.</p>
+
+        <h3 class="mdc-typography--subheading2">Expression types</h3>
+        <ul>
+          <li>
+            URL starts with - matches URLs starting with specified value (e.g. "http://www.bbc.com/news/video_and_audio/")
+          </li>
+          <li>
+            URL is on domain - matches URLs within specified domain (e.g. "www.bbc.com")
+          </li>
+          <li>
+            URL contains - matches URLs containing specified value (e.g. "rss")
+          </li>
+          <li>
+            Title contains - matches pages with url containing specified substring
+          </li>
+        </ul>
       </section>
-      <section class="mdc-toolbar__section mdc-toolbar__section--align-end mdc-toolbar__section--shrink-to-fit">
-        <button id="save-button"
-                class="mdc-button mdc-button--compact mdc-button--icon-align"
-                type="button">
-          <svg class="icon">
-            <use xmlns:xlink="http://www.w3.org/1999/xlink"
-                 xlink:href="icons.svg#save"></use>
-          </svg>
-          Save
+      <footer class="mdc-dialog__footer mdc-theme--primary-bg">
+        <button type="button"
+                class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel">
+          Close
         </button>
-      </section>
+      </footer>
     </div>
-  </header>
-
-  <main class="mdc-toolbar-fixed-adjust">
-    <div id="tab-content-rules">
-       <button id="add-rule-button"
-              class="add-rule-button mdc-fab"
-              title="Add Rule" aria-label="Add Rule">
-        <svg class="icon">
-          <use xmlns:xlink="http://www.w3.org/1999/xlink"
-               xlink:href="icons.svg#add"></use>
-        </svg>
-      </button>
-
-      <div id="rules-container" class="rules-container"></div>
-
-     
-    </div>
-    <div id="tab-content-other-settings">
-
-    </div>
-  </main>
-
-  <div id="notification-bar" class="mdc-snackbar"
-       aria-live="assertive"
-       aria-atomic="true"
-       aria-hidden="true">
-  <div class="mdc-snackbar__text"></div>
-  <div class="mdc-snackbar__action-wrapper">
-    <button type="button"
-            class="mdc-button mdc-snackbar__action-button"></button>
-  </div>
-</div>
+    <div class="mdc-dialog__backdrop"></div>
+  </aside>
 
   <script src="libs/bliss.min.js"></script>
   <script src="js/common.js"></script>

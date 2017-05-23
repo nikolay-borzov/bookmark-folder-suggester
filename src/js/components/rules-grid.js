@@ -160,6 +160,7 @@ let render = {
         }, {
           tag: 'div',
           className: 'folder-path js-folder-path',
+          'aria-label': 'Folder path',
           title: folder.path,
           contents: folder.path
         }]
@@ -269,8 +270,7 @@ let render = {
     let selectedOption = {
       tag: 'span',
       className: 'mdc-select__selected-text',
-      textContent: constants.EXPRESSION_TYPES_NAMES_MAP[expression.typeId],
-      'aria-label': 'Expression Type'
+      textContent: constants.EXPRESSION_TYPES_NAMES_MAP[expression.typeId]
     };
 
     return {
@@ -278,6 +278,7 @@ let render = {
       className: 'mdc-select js-expression-type',
       'data-mdc-auto-init': 'MDCSelect',
       role: 'listbox',
+      'aria-label': 'Expression type',
       tabindex: 0,
       contents: [selectedOption, {
         tag: 'div',

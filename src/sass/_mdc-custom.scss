@@ -4,11 +4,24 @@
 
 .mdc-toolbar__row--dense {
   padding: 10px 14px;
+
+  .mdc-tab-bar {
+    height: 36px;
+  }
 }
 
 // Set margin to new toolbar height
 .mdc-toolbar-fixed-adjust {
   margin-top: 56px;
+}
+
+// Selected tab indicator
+.mdc-toolbar .mdc-tab-bar:not(.mdc-tab-bar-upgraded) .mdc-tab::after {
+  top: calc(100% - 2px);
+}
+
+.mdc-card {
+  @include mdc-theme-prop(background-color, background);
 }
 
 // Use all available space
@@ -89,13 +102,16 @@
   }
 }
 
-// Dence dialog header
+// Dense dialog header
 .mdc-dialog__header {
   padding-top: 12px;
   padding-bottom: 10px;
 }
 
 .mdc-dialog__body {
+  // Make text darker
+  @include mdc-theme-prop(color, text-primary-on-background);
+
   margin-top: 0;
 }
 
@@ -126,3 +142,27 @@
     background-color: $shackbar-color-error;
   }
 }
+
+/*
+// Uncomment to change input colors
+.mdc-checkbox__native-control:checked~.mdc-checkbox__background {
+  @include mdc-theme-prop(background-color, text-primary-on-light);
+  @include mdc-theme-prop(border-color, text-primary-on-light);
+}
+
+.mdc-checkbox__background::before,
+.mdc-radio__background::before,
+.mdc-radio__native-control:checked + .mdc-radio__background .mdc-radio__inner-circle {
+  @include mdc-theme-prop(background-color, text-primary-on-light);
+}
+
+.mdc-radio__native-control:checked + .mdc-radio__background .mdc-radio__outer-circle {
+  @include mdc-theme-prop(border-color, text-primary-on-light);
+}
+*/
+
+.mdc-form-field {
+  height: $form-field-height;
+  white-space: nowrap;
+}
+

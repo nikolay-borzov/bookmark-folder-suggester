@@ -1,16 +1,16 @@
 @import 'variables';
 @import 'icons';
-@import 'mdc-custom';
 // Apply MDC theme
 @import '@material/theme/mdc-theme';
 @import '@material/theme/mixins';
+@import 'mdc-custom';
 
 %block-padding {
   padding: $block-margin;
 }
 
 %block-margin {
-  padding: $block-margin;
+  margin: $block-margin;
 }
 
 %ellipsis {

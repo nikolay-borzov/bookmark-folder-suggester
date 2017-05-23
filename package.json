@@ -1,20 +1,27 @@
 {
   "name": "bookmark-folder-suggester-chrome-extension",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Suggests folder for a bookmark using predefined rules",
   "author": {
     "name": "Nikolay Borzov (chintsu)",
     "email": "nikolay.n.borzov@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nikolay-borzov/bookmark-folder-suggester.git"
   },
   "license": "MIT",
   "main": "src/options.js",
   "scripts": {
     "build": "concurrently \"npm run build-js\" \"npm run build-css\"",
     "watch": "concurrently \"npm run watch-js\" \"npm run watch-css\"",
-    "build-js": "browserify src/options.js src/popup.js -p [ factor-bundle -o dist/js/options.js -o dist/js/popup.js ] -o dist/js/common.js",
-    "watch-js": "watchify src/options.js src/popup.js -p [ factor-bundle -o dist/js/options.js -o dist/js/popup.js ] -o dist/js/common.js --verbose --delay",
-    "build-css": "node-sass src/sass --include-path node_modules -o dist/css/ --recursive --output-style compressed",
-    "watch-css": "node-sass src/sass --include-path node_modules -o dist/css/ --recursive --output-style expanded -watch",
+    "build-js": "browserify src/js/options.js src/js/popup.js -p [ factor-bundle -o dist/js/options.js -o dist/js/popup.js ] -o dist/js/common.js",
+    "watch-js": "watch \"npm run build-js\" src/js/",
+    "build-css": "node-sass src/sass --include-path node_modules -o dist/css/ --recursive --output-style compressed && npm run purify-css",
+    "watch-css": "watch \"npm run build-css\" src/sass/",
+    "purify-css": "concurrently \"npm run purify-css-options\" \"npm run purify-css-popup\"",
+    "purify-css-options": "purifycss dist/css/options.css dist/js/options.js dist/js/common.js dist/options.html --min --out dist/css/options.css",
+    "purify-css-popup": "purifycss dist/css/popup.css dist/js/popup.js dist/js/common.js dist/popup.html --min --out dist/css/popup.css",
     "build-icons": "gulp svgstore",
     "build-img": "del-cli dist/img/**/*.png && svg2png src/img/app/128.svg -o=dist/img/app/128.png && svg2png src/img/app/48.svg -o=dist/img/app/48.png && svg2png src/img/browser-action/24.svg -o=dist/img/browser-action/24.png && svg2png src/img/browser-action/32.svg -o=dist/img/browser-action/32.png && svg2png src/img/16.svg -o=dist/img/16.png",
     "eslint-fix": "eslint --fix src/**/*.js",
@@ -32,26 +39,28 @@
     "material-components-web": "^0.11.1",
     "node-sass": "^4.5.3",
     "npm-check-updates": "^2.11.1",
+    "purify-css": "^1.2.2",
     "stylelint": "^7.10.1",
     "stylelint-config-sass-guidelines": "^2.1.0",
     "stylelint-config-standard": "^16.0.0",
     "stylelint-order": "^0.4.4",
     "stylelint-scss": "^1.4.4",
     "svg2png": "^4.1.1",
-    "watchify": "^3.9.0"
+    "watch": "^1.0.2"
   },
   "browser": {
-    "bookmarks-helper": "./src/common/bookmarks-helper.js",
-    "dom-helper": "./src/common/dom-helper.js",
-    "constants": "./src/common/constants.js",
-    "rules-engine": "./src/common/rules-engine.js",
-    "settings": "./src/common/settings.js",
-    "notifier": "./src/common/notifier",
-    "bookmarks-modal": "./src/components/bookmarks-modal.js",
-    "rules-grid": "./src/components/rules-grid.js",
+    "bookmarks-helper": "./src/js/common/bookmarks-helper.js",
+    "dom-helper": "./src/js/common/dom-helper.js",
+    "constants": "./src/js/common/constants.js",
+    "rules-engine": "./src/js/common/rules-engine.js",
+    "settings": "./src/js/common/settings.js",
+    "notifier": "./src/js/common/notifier",
+    "bookmarks-modal": "./src/js/components/bookmarks-modal.js",
+    "rules-grid": "./src/js/components/rules-grid.js",
     "@material/auto-init": "./node_modules/@material/auto-init/dist/mdc.autoInit.min.js",
     "@material/snackbar": "./node_modules/@material/snackbar/dist/mdc.snackbar.min.js",
     "@material/select": "./node_modules/@material/select/dist/mdc.select.min.js",
-    "@material/dialog": "./node_modules/@material/dialog/dist/mdc.dialog.min.js"
+    "@material/dialog": "./node_modules/@material/dialog/dist/mdc.dialog.min.js",
+    "@material/tabs": "./node_modules/@material/tabs/dist/mdc.tabs.min.js"
   }
 }

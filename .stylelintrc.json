@@ -12,6 +12,7 @@
     "number-leading-zero": "never",
     "order/properties-alphabetical-order": null,
     "max-nesting-depth": 3,
+    "selector-no-qualifying-type": null,
     "order/properties-order": [
       "display",
       "position",
