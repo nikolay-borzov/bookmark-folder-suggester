@@ -1,6 +1,6 @@
 {
   "name": "bookmark-folder-suggester-chrome-extension",
-  "version": "0.3.1",
+  "version": "1.0.0",
   "description": "Suggests folder for a bookmark using predefined rules",
   "author": {
     "name": "Nikolay Borzov (chintsu)",
