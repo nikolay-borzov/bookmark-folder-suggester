@@ -9,67 +9,10 @@
 </head>
 
 <body class="mdc-typography">
-  <header class="mdc-toolbar mdc-toolbar--fixed">
-    <div class="mdc-toolbar__row mdc-toolbar__row--fluid-height mdc-toolbar__row--dense">
-      <section class="mdc-toolbar__section mdc-toolbar__section--align-start mdc-toolbar__section--shrink-to-fit">
-        <button id="export-button" type="button"
-                class="mdc-button mdc-button--icon-align mdc-button--compact"
-                title="Export settings to file">
-          <svg class="icon">
-            <use xmlns:xlink="http://www.w3.org/1999/xlink"
-                 xlink:href="icons.svg#download"></use>
-          </svg>
-          Export
-        </button>
-
-        <button id="import-button" type="button"
-                class="mdc-button mdc-button--icon-align mdc-button--compact"
-                title="Import settings from file">
-          <svg class="icon">
-            <use xmlns:xlink="http://www.w3.org/1999/xlink"
-                 xlink:href="icons.svg#upload"></use>
-          </svg>
-          Import
-        </button>
-        <input type="file" id="import-file-input" accept=".json" style="display:none">
-
-        <button id="help-button" type="button"
-                class="mdc-button mdc-button--icon"
-                title="Help" aria-label="Help">
-          <svg class="icon">
-            <use xmlns:xlink="http://www.w3.org/1999/xlink"
-                 xlink:href="icons.svg#help"></use>
-          </svg>
-          Import
-        </button>
-      </section>
-
-      <section class="mdc-toolbar__section">
-        <nav id="tabs-bar" class="mdc-tab-bar" role="tablist">
-          <a class="mdc-tab mdc-tab--active" role="tab">
-            Rules
-          </a>
-          <a class="mdc-tab" role="tab">
-            Other settings
-          </a>
-          <span class="mdc-tab-bar__indicator"></span>
-        </nav>
-      </section>
-
-      <section class="mdc-toolbar__section mdc-toolbar__section--align-end mdc-toolbar__section--shrink-to-fit">
-        <button id="save-button"
-                class="mdc-button mdc-button--compact mdc-button--icon-align"
-                type="button">
-          <svg class="icon">
-            <use xmlns:xlink="http://www.w3.org/1999/xlink"
-                 xlink:href="icons.svg#save"></use>
-          </svg>
-          Save
-        </button>
-      </section>
-    </div>
-  </header>
-
+  <div id="app">
+    <options-header></options-header>
+  </div>
+  
   <main id="panels-container"
         class="panels-container mdc-toolbar-fixed-adjust">
     <div class="tab-panel is-active" role="tabpanel" aria-hidden="false">
@@ -233,6 +176,7 @@
     <div class="mdc-dialog__backdrop"></div>
   </aside>
 
+  <!--<script src="libs/vue.runtime.js"></script>-->
   <script src="libs/bliss.min.js"></script>
   <script src="js/common.js"></script>
   <script src="js/options.js"></script>

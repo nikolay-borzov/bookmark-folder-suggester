@@ -1,4 +1,4 @@
-require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({10:[function(require,module,exports){
+require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({13:[function(require,module,exports){
 'use strict';
 
 /**
@@ -139,7 +139,7 @@ module.exports = {
   createSuggestedRule
 };
 
-},{"constants":7,"settings":11}],11:[function(require,module,exports){
+},{"constants":10,"settings":14}],14:[function(require,module,exports){
 'use strict';
 
 /**
@@ -306,8 +306,10 @@ module.exports = {
   getStorageQuotaBytes
 };
 
-},{}],8:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict';
+
+// TODO: DEPRECATED
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const XLINK_NS = 'http://www.w3.org/1999/xlink';
@@ -357,7 +359,7 @@ module.exports = {
   create
 };
 
-},{}],7:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 'use strict';
 
 const EXPRESSION_TYPES = {

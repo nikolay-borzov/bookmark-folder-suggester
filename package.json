@@ -46,6 +46,8 @@
     "stylelint-order": "^0.4.4",
     "stylelint-scss": "^1.4.4",
     "svg2png": "^4.1.1",
+    "vue": "^2.3.3",
+    "vueify": "^9.4.1",
     "watch": "^1.0.2"
   },
   "browser": {
@@ -57,10 +59,20 @@
     "notifier": "./src/js/common/notifier",
     "bookmarks-modal": "./src/js/components/bookmarks-modal.js",
     "rules-grid": "./src/js/components/rules-grid.js",
+    "components/icon": "./src/js/components/icon.vue",
+    "components/mdc-button": "./src/js/components/mdc-button.vue",
+    "components/options-app": "./src/js/components/options-app.vue",
+    "components/options-header": "./src/js/components/options-header.vue",
+    "vue": "./node_modules/vue/dist/vue.runtime.common.js",
     "@material/auto-init": "./node_modules/@material/auto-init/dist/mdc.autoInit.min.js",
     "@material/snackbar": "./node_modules/@material/snackbar/dist/mdc.snackbar.min.js",
     "@material/select": "./node_modules/@material/select/dist/mdc.select.min.js",
     "@material/dialog": "./node_modules/@material/dialog/dist/mdc.dialog.min.js",
     "@material/tabs": "./node_modules/@material/tabs/dist/mdc.tabs.min.js"
+  },
+  "browserify": {
+    "transform": [
+      "vueify"
+    ]
   }
 }

@@ -1,5 +1,7 @@
 'use strict';
 
+const Vue = require('vue');
+
 const mdcDialog = require('@material/dialog');
 const mdcTabs = require('@material/tabs');
 
@@ -214,4 +216,23 @@ $.ready().then(() => {
 
   initTabs();
   restore();
+});
+
+Vue.component('options-header', require('components/options-header'));
+Vue.component('icon', require('components/icon'));
+Vue.component('mdc-button', require('components/mdc-button'));
+
+const app = require('components/options-app');
+
+new Vue({
+  el: '#app',
+  render: h => h(app)/* ,
+  data: {
+    input: '# hello'
+  },
+  computed: {
+    compiledMarkdown: function() {
+      return this.input;
+    }
+  }*/
 });
