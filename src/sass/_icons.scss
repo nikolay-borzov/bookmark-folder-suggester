@@ -3,7 +3,7 @@
   height: #{$size}px;
 }
 
-$icon-sizes: 18 24 36 48;
+$icon-sizes: 18 20 24 36 48;
 
 @each $size in $icon-sizes {
   %icon-size-#{$size},

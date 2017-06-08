@@ -1,0 +1,138 @@
+{
+  "extension_name": {
+    "message": "Bookmark Folder Suggester"
+  },
+  "extension_description": {
+    "message": "Suggests folder for a bookmark using predefined rules"
+  },
+  "popup_title": {
+    "message": "Suggest Bookmark Folder"
+  },
+  "options_export_btn": {
+    "message": "Export"
+  },
+  "options_export_btn_title": {
+    "message": "Export settings to file"
+  },
+  "options_import_btn": {
+    "message": "Import"
+  },
+  "options_import_btn_title": {
+    "message": "Import settings from file"
+  },
+  "options_help_btn_title": {
+    "message": "Show help"
+  },
+  "options_tab_rules": {
+    "message": "Rules"
+  },
+  "options_tab_other_settings": {
+    "message": "Other settings"
+  },
+  "options_save_btn": {
+    "message": "Save"
+  },
+  "options_auto_bookmark_label": {
+    "message": "Bookmark into first suggested folder",
+    "description": "Explains auto-bookmark option"
+  },
+  "options_storage_used_label": {
+    "message": "Storage used"
+  },
+  "options_size_kb": {
+    "message": "Kb"
+  },
+  "help_dialog_title": {
+    "message": "Help"
+  },
+  "help_dialog_create_rule_header": {
+    "message": "Create a rule"
+  },
+  "help_dialog_create_rule_step1": {
+    "message": "Click on FAB button (circle button with a plus sign)"
+  },
+  "help_dialog_create_rule_step2": {
+    "message": "Click on \"Select folder\" button and select bookmark folder"
+  },
+  "help_dialog_create_rule_step3": {
+    "message": "Specify one or more expressions:"
+  },
+  "help_dialog_create_rule_step3_hint1": {
+    "message": "Expressions operation is a logical conjunction - expressions are AND-ed."
+  },
+  "help_dialog_create_rule_step3_1": {
+    "message": "Set expression type - \"URL starts with\", \"Title contains\" and etc."
+  },
+  "help_dialog_create_rule_step3_2": {
+    "message": "Set expression value - URL or part of the URL or part of the Title"
+  },
+  "help_dialog_create_rule_step3_2_example": {
+    "message": "For example if you want to select any page with URL containing \"JavaScript\" and on \"https://developer.mozilla.org\" site - you need to set"
+  },
+  "help_dialog_create_rule_step3_2_example_value1": {
+    "message": "URL is on domain: \"developer.mozilla.org\""
+  },
+  "help_dialog_create_rule_step3_2_example_value2": {
+    "message": "URL contains: \"JavaScript\""
+  },
+  "help_dialog_create_rule_step3_2_hint": {
+    "message": "Expression value is case insensitive"
+  },
+  "help_dialog_create_rule_for_page_header": {
+    "message": "Create a rule for current page"
+  },
+  "help_dialog_create_rule_for_page": {
+    "message": "You can add a rule for current the page by clicking on \"Add rule\" button inside browse action popup. Page title and url is copied to a new rule as expression values. If the page is already bookmarked the bookmark's folder will be copied to rule."
+  },
+  "help_dialog_expression_types_header": {
+    "message": "Expression types"
+  },
+  "help_dialog_expression_types_type1": {
+    "message": "URL starts with - matches URLs starting with specified value (e.g. \"http://www.bbc.com/news/video_and_audio/\")"
+  },
+  "help_dialog_expression_types_type2": {
+    "message": "URL is on domain - matches URLs within specified domain (e.g. \"www.bbc.com\")"
+  },
+  "help_dialog_expression_types_type3": {
+    "message": "URL contains - matches URLs containing specified value (e.g. \"rss\")"
+  },
+  "help_dialog_expression_types_type4": {
+    "message": "Title contains - matches pages with url containing specified substring"
+  },
+  "help_dialog_close_btn": {
+    "message": "Close"
+  },
+  "rules_list_add_btn_title": {
+    "message": "Add Rule"
+  },
+  "rules_list_delete_rule_btn_title": {
+    "message": "Delete Rule"
+  },
+  "rules_list_select_folder_btn": {
+    "message": "Select folder"
+  },
+  "rules_list_add_expression_btn": {
+    "message": "Add Expression"
+  },
+  "rules_list_delete_expression_btn_title": {
+    "message": "Delete Expression"
+  },
+  "rules_list_expression_type_label": {
+    "message": "Expression type"
+  },
+  "expression_type_urlStartsWith": {
+    "message": "URL starts with"
+  },
+  "expression_type_urlIsOnDomain": {
+    "message": "URL is on domain"
+  },
+  "expression_type_urlContains": {
+    "message": "URL contains"
+  },
+  "expression_type_titleContains": {
+    "message": "Title contains"
+  },
+  "rules_list_expression_value_label": {
+    "message": "Expression"
+  }
+}

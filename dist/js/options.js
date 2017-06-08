@@ -3,49 +3,23 @@ require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof requ
 
 const Vue = require('vue');
 
-const mdcDialog = require('@material/dialog');
-const mdcTabs = require('@material/tabs');
-
 const settings = require('settings');
 const rulesGrid = require('rules-grid');
 const rulesEngine = require('rules-engine');
 const bookmarksHelper = require('bookmarks-helper');
 const notifier = require('notifier');
+const filters = require('filters');
 
-const STORAGE_SIZE_EXCEEDED_ERROR_KEY = 'QUOTA_BYTES_PER_ITEM';
+Vue.component('icon', require('components/icon'));
+Vue.component('mdc-button', require('components/mdc-button'));
+Vue.component('options-header', require('options/components/header'));
+Vue.component('help-dialog', require('options/components/help-dialog'));
+Vue.component('rules-list', require('options/components/rules-list'));
 
-let helpDialog = null;
+const store = require('options/store');
+const app = require('options/components/app');
 
-let elements = {
-  autoBookmarkCheckbox: null,
-  storageUsedText: null,
-  storageProgressBar: null
-};
-
-function initTabs() {
-  let tabBar = window.dynamicTabBar = new mdcTabs.MDCTabBar(document.getElementById('tabs-bar'));
-  tabBar.preventDefaultOnClick = true;
-
-  let panelsContainer = document.getElementById('panels-container');
-
-  let selectPanel = (activeTabIndex) => {
-    let activePanel = $('.tab-panel.is-active', panelsContainer);
-    activePanel.classList.remove('is-active');
-    $.set(activePanel, {
-      'aria-hidden': true
-    });
-
-    let panel = $(`.tab-panel:nth-child(${activeTabIndex + 1})`, panelsContainer);
-    panel.classList.add('is-active');
-    $.set(panel, {
-      'aria-hidden': false
-    });
-  };
-
-  tabBar.listen('MDCTabBar:change', ({ detail: tabs }) => {
-    selectPanel(tabs.activeTabIndex);
-  });
-}
+const mutationTypes = require('options/mutation-types');
 
 /**
  * Restores options
@@ -57,19 +31,10 @@ function restore(settingsObj) {
     // Add suggested rule if one exists
     addSuggestedRule();
 
-    elements.autoBookmarkCheckbox.checked = settingsObj.autoBookmark;
+    // Elements.autoBookmarkCheckbox.checked = settingsObj.autoBookmark;
 
-    settings.getStorageBytesInUse().then(bytesInUse => {
-      const quota = settings.getStorageQuotaBytes();
-
-      let inUseKb = Math.floor(bytesInUse / 1000).toLocaleString();
-      let quotaKb = Math.floor(quota / 1000).toLocaleString();
-
-      let usagePercent = Math.floor((100 * bytesInUse) / quota);
-
-      elements.storageUsedText.innerText = `${inUseKb}/${quotaKb} Kb`;
-      $.style(elements.storageProgressBar, { width: `${usagePercent}%` });
-    });
+    // TODO: Temporary
+    store.commit(mutationTypes.SET_SETTINGS, settingsObj);
   };
 
   if (settingsObj) {
@@ -119,94 +84,8 @@ function addSuggestedRule() {
   });
 }
 
-let actions = {
-  /**
-   * Saves options
-   * @return {Promise}
-   */
-  save() {
-    notifier.progressStart('Saving...');
-    let settingsObj = {
-      rules: rulesGrid.getRules(),
-      autoBookmark: elements.autoBookmarkCheckbox.checked
-    };
-
-    return settings.set(settingsObj)
-      .then(settingsObj => {
-        notifier.success('Saved');
-
-        return settingsObj;
-      })
-      .catch(error => {
-        if (error.message.includes(STORAGE_SIZE_EXCEEDED_ERROR_KEY)) {
-          notifier.error('Storage size limit is exceeded');
-        } else {
-          notifier.error('Unexpected error');
-        }
-      })
-      .then(notifier.progressEnd);
-  },
-
-  /**
-   * Exports settings to file
-   */
-  export() {
-    // Save before exporting
-    settings.set({ rules: rulesGrid.getRules() })
-      .then(settingsObj => {
-        notifier.progressStart('Exporting...');
-
-        settings.exportToFile(settingsObj)
-          .then(notifier.progressEnd);
-      });
-  },
-
-  /**
-   * Imports settings from file
-   * @this Event
-   */
-  import() {
-    settings.importFromFile(this.files[0])
-      .then(restore)
-      .catch(() => notifier.error('Cannot import settings file'));
-  },
-
-  getHelp() {
-    if (!helpDialog) {
-      helpDialog = new mdcDialog.MDCDialog(document.getElementById('help-dialog'));
-    }
-
-    helpDialog.show();
-  }
-};
-
 $.ready().then(() => {
   rulesGrid.init();
-
-  elements.autoBookmarkCheckbox = document.getElementById('auto-bookmark-checkbox');
-  elements.storageUsedText = document.getElementById('storage-used-text');
-  elements.storageProgressBar = document.getElementById('storage-used-progress-bar');
-
-  // Save settings
-  let saveButton = document.getElementById('save-button');
-  saveButton.addEventListener('click', actions.save);
-
-  // Export settings to file
-  let exportButton = document.getElementById('export-button');
-  exportButton.addEventListener('click', actions.export);
-
-  // Process selected settings files
-  let importFileInput = document.getElementById('import-file-input');
-  importFileInput.addEventListener('change', actions.import);
-
-  // Open file selection dialog on import button click
-  let importButton = document.getElementById('import-button');
-  importButton.addEventListener('click', () => {
-    importFileInput.click();
-  });
-
-  let helpButton = document.getElementById('help-button');
-  helpButton.addEventListener('click', actions.getHelp);
 
   // Listen to message in case options page is already open
   chrome.runtime.onMessage.addListener(request => {
@@ -215,30 +94,351 @@ $.ready().then(() => {
     }
   });
 
-  initTabs();
   restore();
 });
 
-Vue.component('options-header', require('components/options-header'));
-Vue.component('icon', require('components/icon'));
-Vue.component('mdc-button', require('components/mdc-button'));
+/* Vue.config.errorHandler = function() {
+  notifier.error('Vue error. See console for details');
+};*/
 
-const app = require('components/options-app');
+filters.register();
 
 new Vue({
   el: '#app',
-  render: h => h(app)/* ,
-  data: {
-    input: '# hello'
-  },
-  computed: {
-    compiledMarkdown: function() {
-      return this.input;
-    }
-  }*/
+  store,
+  render: h => h(app)
 });
 
-},{"@material/dialog":2,"@material/tabs":5,"bookmarks-helper":9,"components/icon":16,"components/mdc-button":17,"components/options-app":18,"components/options-header":19,"notifier":12,"rules-engine":13,"rules-grid":20,"settings":14,"vue":8}],20:[function(require,module,exports){
+},{"bookmarks-helper":10,"components/icon":18,"components/mdc-button":19,"filters":13,"notifier":14,"options/components/app":22,"options/components/header":23,"options/components/help-dialog":24,"options/components/rules-list":25,"options/mutation-types":26,"options/store":27,"rules-engine":15,"rules-grid":20,"settings":16,"vue":8}],27:[function(require,module,exports){
+'use strict';
+
+const Vue = require('vue');
+const Vuex = require('vuex');
+
+const mutationTypes = require('options/mutation-types');
+
+Vue.use(Vuex);
+
+module.exports = new Vuex.Store({
+  state: {
+    rules: [],
+    autoBookmark: true,
+    activeTabIndex: 0
+  },
+
+  getters: {
+    settings(state) {
+      return {
+        rules: state.rules,
+        autoBookmark: state.autoBookmark
+      };
+    }
+  },
+
+  mutations: {
+    [mutationTypes.SET_SETTINGS](state, settingsObj) {
+      state.rules = settingsObj.rules;
+      state.autoBookmark = settingsObj.autoBookmark;
+    },
+
+    [mutationTypes.SET_TAB_INDEX](state, index) {
+      state.activeTabIndex = index;
+    },
+
+    [mutationTypes.SET_AUTO_BOOKMARK](state, autoBookmark) {
+      state.autoBookmark = autoBookmark;
+    }
+  }
+});
+
+},{"options/mutation-types":26,"vue":8,"vuex":9}],25:[function(require,module,exports){
+;(function(){
+'use strict';
+
+const mdcSelect = require('@material/select');
+const mdcAutoInit = require('@material/auto-init').default;
+mdcAutoInit.register('MDCSelect', mdcSelect.MDCSelect);
+
+const constants = require('constants');
+const filters = require('filters');
+
+module.exports = {
+  name: 'rules-list',
+
+  computed: {
+    expressionTypes() {
+      return Object.keys(constants.EXPRESSION_TYPES).map(key => {
+        const typeId = constants.EXPRESSION_TYPES[key];
+
+        return {
+          id: typeId,
+          name: filters.i18n(`expression_type_${typeId}`)
+        };
+      });
+    },
+
+    rules() {
+      return this.$store.state.rules;
+    }
+  },
+
+  updated() {
+    mdcAutoInit(document.getElementById('_rules-container'), () => {});
+  }
+};
+
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"rules-container",attrs:{"id":"_rules-container"}},[_c('button',{staticClass:"add-rule-button mdc-fab",attrs:{"id":"add-rule-button","title":_vm._f("i18n")('rules_list_add_btn_title'),"aria-label":_vm._f("i18n")('rules_list_add_btn_title')}},[_c('icon',{attrs:{"type":"add"}})],1),_vm._v(" "),_vm._l((_vm.rules),function(rule){return _c('div',{staticClass:"rule-row mdc-card"},[_c('div',{staticClass:"mdc-card__horizontal-block"},[_c('section',{staticClass:"mdc-card__primary"},[_c('div',[_c('div',{staticClass:"folder-link-wrapper"},[_c('mdc-button',{attrs:{"title":rule.folder.title,"icon-type":"folder","icon-size":1,"compact":true,"dense":true,"raised":true,"primary":!rule.folder.id}},[_c('span',{staticClass:"folder-name"},[_vm._v("\n                "+_vm._s(rule.folder.title || ('rules_list_select_folder_btn' | _vm.i18n))+"\n              ")])]),_vm._v(" "),_c('div',{staticClass:"folder-path",attrs:{"title":rule.folder.path}},[_vm._v("\n              "+_vm._s(rule.folder.path)+"\n            ")])],1)]),_vm._v(" "),_c('div',{staticClass:"rule-field-expressions mdc-card"},[_c('section',{staticClass:"mdc-card__primary"},_vm._l((rule.expressions),function(expression){return _c('div',{staticClass:"expression-row"},[_c('div',{staticClass:"expression-field"},[_c('div',{staticClass:"mdc-select",attrs:{"role":"listbox","tabindex":"0","data-mdc-auto-init":"MDCSelect","aria-label":_vm._f("i18n")('rules_list_expression_type_label')}},[_c('span',{staticClass:"mdc-select__selected-text"},[_vm._v("\n                    "+_vm._s(_vm._f("i18n")(("expression_type_" + (expression.typeId))))+"\n                  ")]),_vm._v(" "),_c('div',{staticClass:"mdc-simple-menu mdc-select__menu"},[_c('ul',{staticClass:"mdc-list mdc-simple-menu__items"},_vm._l((_vm.expressionTypes),function(expressionType){return _c('li',{staticClass:"mdc-list-item",attrs:{"role":"option","tabindex":"0","id":expressionType.id,"aria-selected":expression.typeId === expressionType.id}},[_vm._v("\n                        "+_vm._s(expressionType.name)+"\n                      ")])}))])])]),_vm._v(" "),_c('div',{staticClass:"expression-field expression-field-value"},[_c('div',{staticClass:"mdc-textfield"},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(expression.value),expression:"expression.value"}],staticClass:"mdc-textfield__input",attrs:{"type":"text","aria-label":_vm._f("i18n")('rules_list_expression_value_label')},domProps:{"value":(expression.value)},on:{"input":function($event){if($event.target.composing){ return; }expression.value=$event.target.value}}})])]),_vm._v(" "),_c('div',{staticClass:"expression-field"},[_c('mdc-button',{staticClass:"mdc-card__action",attrs:{"icon-only":true,"icon-type":"delete","icon-size":1,"title":_vm._f("i18n")('rules_list_delete_expression_btn_title'),"aria-label":_vm._f("i18n")('rules_list_delete_expression_btn_title')}})],1)])})),_vm._v(" "),_c('section',{staticClass:"mdc-card__actions mdc-card__actions--vertical"},[_c('mdc-button',{staticClass:"mdc-card__action",attrs:{"compact":true,"dense":true,"icon-type":"add","icon-size":1}},[_vm._v("\n              "+_vm._s(_vm._f("i18n")('rules_list_add_expression_btn'))+"\n            ")])],1)])]),_vm._v(" "),_c('section',{staticClass:"mdc-card__actions mdc-card__actions--vertical"},[_c('mdc-button',{staticClass:"mdc-card__action",attrs:{"compact":true,"icon-only":true,"icon-type":"delete","title":_vm._f("i18n")('rules_list_delete_rule_btn_title'),"aria-label":_vm._f("i18n")('rules_list_delete_rule_btn_title')}})],1)])])})],2)}
+__vue__options__.staticRenderFns = []
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-27b09eef", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-27b09eef", __vue__options__)
+  }
+})()}
+},{"@material/auto-init":1,"@material/select":3,"constants":11,"filters":13,"vue":8,"vue-hot-reload-api":7}],24:[function(require,module,exports){
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _vm._m(0)}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('aside',{staticClass:"mdc-dialog",attrs:{"id":"help-dialog","role":"alertdialog","aria-labelledby":"help-dialog-header","aria-describedby":"help-dialog-body"}},[_c('div',{staticClass:"mdc-dialog__surface"},[_c('header',{staticClass:"mdc-dialog__header mdc-theme--primary-bg"},[_c('h2',{staticClass:"mdc-dialog__header__title",attrs:{"id":"help-dialog-header"}},[_vm._v("\n        "+_vm._s(_vm._f("i18n")('help_dialog_title'))+"\n      ")])]),_vm._v(" "),_c('section',{staticClass:"mdc-dialog__body mdc-dialog__body--scrollable",attrs:{"id":"help-dialog-body"}},[_c('h3',{staticClass:"mdc-typography--subheading2"},[_vm._v("\n        "+_vm._s(_vm._f("i18n")('help_dialog_create_rule_header'))+"\n      ")]),_vm._v(" "),_c('ol',[_c('li',[_vm._v(_vm._s(_vm._f("i18n")('help_dialog_create_rule_step1')))]),_vm._v(" "),_c('li',[_vm._v(_vm._s(_vm._f("i18n")('help_dialog_create_rule_step2')))]),_vm._v(" "),_c('li',[_vm._v(_vm._s(_vm._f("i18n")('help_dialog_create_rule_step3'))+"\n          "),_c('div',{staticClass:"mdc-theme--text-hint-on-light"},[_vm._v("\n            "+_vm._s(_vm._f("i18n")('help_dialog_create_rule_step3_hint1'))+" \n          ")]),_vm._v(" "),_c('ol',[_c('li',[_vm._v(_vm._s(_vm._f("i18n")('help_dialog_create_rule_step3_1')))]),_vm._v(" "),_c('li',[_vm._v("\n              "+_vm._s(_vm._f("i18n")('help_dialog_create_rule_step3_2'))+"\n              "),_c('div',{staticClass:"mdc-theme--text-hint-on-light"},[_vm._v("\n                "+_vm._s(_vm._f("i18n")('help_dialog_create_rule_step3_2_example'))+":\n                "),_c('ul',[_c('li',[_vm._v(_vm._s(_vm._f("i18n")('help_dialog_create_rule_step3_2_example_value1')))]),_vm._v(" "),_c('li',[_vm._v(_vm._s(_vm._f("i18n")('help_dialog_create_rule_step3_2_example_value2')))])])]),_vm._v(" "),_c('div',{staticClass:"mdc-theme--text-hint-on-light"},[_vm._v("\n                "+_vm._s(_vm._f("i18n")('help_dialog_create_rule_step3_2_hint'))+"\n              ")])])])])]),_vm._v(" "),_c('h3',{staticClass:"mdc-typography--subheading2"},[_vm._v("\n        "+_vm._s(_vm._f("i18n")('help_dialog_create_rule_for_page_header'))+"\n      ")]),_vm._v(" "),_c('p',{staticClass:"mdc-typography--body1"},[_vm._v("\n        "+_vm._s(_vm._f("i18n")('help_dialog_create_rule_for_page'))+"\n      ")]),_vm._v(" "),_c('h3',{staticClass:"mdc-typography--subheading2"},[_vm._v("\n        "+_vm._s(_vm._f("i18n")('help_dialog_expression_types_header'))+"\n      ")]),_vm._v(" "),_c('ul',[_c('li',[_vm._v("\n          "+_vm._s(_vm._f("i18n")('help_dialog_expression_types_type1'))+"\n        ")]),_vm._v(" "),_c('li',[_vm._v("\n          "+_vm._s(_vm._f("i18n")('help_dialog_expression_types_type2'))+"\n        ")]),_vm._v(" "),_c('li',[_vm._v("\n          "+_vm._s(_vm._f("i18n")('help_dialog_expression_types_type3'))+"\n        ")]),_vm._v(" "),_c('li',[_vm._v("\n          "+_vm._s(_vm._f("i18n")('help_dialog_expression_types_type4'))+"\n        ")])])]),_vm._v(" "),_c('footer',{staticClass:"mdc-dialog__footer mdc-theme--primary-bg"},[_c('mdc-button',{staticClass:"mdc-dialog__footer__button mdc-dialog__footer__button--cancel"},[_vm._v("\n        "+_vm._s(_vm._f("i18n")('help_dialog_close_btn'))+"\n      ")])],1)]),_vm._v(" "),_c('div',{staticClass:"mdc-dialog__backdrop"})])}]
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-57a600ae", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-57a600ae", __vue__options__)
+  }
+})()}
+},{"vue":8,"vue-hot-reload-api":7}],23:[function(require,module,exports){
+;(function(){
+'use strict';
+
+const mdcDialog = require('@material/dialog');
+const mdcTabs = require('@material/tabs');
+
+const mutationTypes = require('options/mutation-types');
+
+const settings = require('settings');
+const notifier = require('notifier');
+
+const rulesGrid = require('rules-grid');
+
+let helpDialog = null;
+
+let elements = {
+  importFileInput: null
+};
+
+module.exports = {
+  name: 'options-header',
+
+  methods: {
+    /**
+     * Saves options
+     * @return {Promise}
+     */
+    saveSettings() {
+      notifier.progressStart('Saving...');
+
+      // TODO: Temporary. Remove when rulesGrid writes rules into the store
+      this.$store.commit(mutationTypes.SET_SETTINGS, {
+        rules: rulesGrid.getRules(),
+        autoBookmark: true
+      });
+
+      settings.set(this.$store.getters.settings)
+        .then(() => notifier.success('Saved'))
+        .catch(notifier.error)
+        .then(notifier.progressEnd);
+    },
+
+     /**
+     * Exports settings to file
+     */
+    exportSettings() {
+      // TODO: Temporary. Remove when rulesGrid writes rules into the store
+      this.$store.commit(mutationTypes.SET_SETTINGS, {
+        rules: rulesGrid.getRules(),
+        autoBookmark: true
+      });
+
+      // Save before exporting
+      settings.set(this.$store.getters.settings)
+        .then(settingsObj => {
+          notifier.progressStart('Exporting...');
+
+          settings.exportToFile(settingsObj)
+            .then(notifier.progressEnd);
+        })
+        .catch(notifier.error);
+    },
+
+    /**
+     * Imports settings from file
+     */
+    selectFile() {
+      elements.importFileInput.click();
+    },
+
+    /**
+     * Read selected file
+     * @param {Event} event
+     */
+    readFile(event) {
+      settings.importFromFile(event.target.files[0])
+        .then(settingsObj => {
+          this.$store.commit(mutationTypes.SET_SETTINGS, settingsObj);
+          // TODO: Temporary
+          rulesGrid.addRules(settingsObj.rules);
+        })
+        .catch(() => notifier.error('Cannot import settings file'));
+    },
+
+    /**
+     * Show help dialog
+     */
+    showHelp() {
+      if (!helpDialog) {
+        helpDialog = new mdcDialog.MDCDialog(document.getElementById('help-dialog'));
+      }
+
+      helpDialog.show();
+    }
+  },
+
+  mounted() {
+    elements.importFileInput = document.getElementById('import-file-input');
+
+    let tabBar = window.dynamicTabBar = new mdcTabs.MDCTabBar(document.getElementById('tabs-bar'));
+    tabBar.preventDefaultOnClick = true;
+
+    tabBar.listen('MDCTabBar:change', ({ detail: tabs }) => {
+      this.$store.commit(mutationTypes.SET_TAB_INDEX, tabs.activeTabIndex);
+    });
+  }
+};
+
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _vm._m(0)}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('header',{staticClass:"mdc-toolbar mdc-toolbar--fixed"},[_c('div',{staticClass:"mdc-toolbar__row mdc-toolbar__row--fluid-height mdc-toolbar__row--dense"},[_c('section',{staticClass:"mdc-toolbar__section mdc-toolbar__section--align-start mdc-toolbar__section--shrink-to-fit"},[_c('mdc-button',{attrs:{"id":"export-button","title":_vm._f("i18n")('options_export_btn_title'),"compact":true,"icon-type":"download"},nativeOn:{"click":function($event){_vm.exportSettings($event)}}},[_vm._v("\n        "+_vm._s(_vm._f("i18n")('options_export_btn'))+"\n      ")]),_vm._v(" "),_c('mdc-button',{attrs:{"id":"import-button","title":_vm._f("i18n")('options_import_btn_title'),"compact":true,"icon-type":"upload"},nativeOn:{"click":function($event){_vm.selectFile($event)}}},[_vm._v("\n        "+_vm._s(_vm._f("i18n")('options_import_btn'))+"\n      ")]),_vm._v(" "),_c('input',{staticStyle:{"display":"none"},attrs:{"type":"file","id":"import-file-input","accept":".json"},on:{"change":_vm.readFile}}),_vm._v(" "),_c('mdc-button',{attrs:{"id":"help-button","title":_vm._f("i18n")('options_help_btn_title'),"aria-label":_vm._f("i18n")('options_help_btn_title'),"icon-only":true,"icon-type":"help"},nativeOn:{"click":function($event){_vm.showHelp($event)}}})],1),_vm._v(" "),_c('section',{staticClass:"mdc-toolbar__section"},[_c('nav',{staticClass:"mdc-tab-bar",attrs:{"id":"tabs-bar","role":"tablist"}},[_c('a',{staticClass:"mdc-tab mdc-tab--active",attrs:{"role":"tab"}},[_vm._v("\n          "+_vm._s(_vm._f("i18n")('options_tab_rules'))+"\n        ")]),_vm._v(" "),_c('a',{staticClass:"mdc-tab",attrs:{"role":"tab"}},[_vm._v("\n          "+_vm._s(_vm._f("i18n")('options_tab_other_settings'))+"\n        ")]),_vm._v(" "),_c('span',{staticClass:"mdc-tab-bar__indicator"})])]),_vm._v(" "),_c('section',{staticClass:"mdc-toolbar__section mdc-toolbar__section--align-end mdc-toolbar__section--shrink-to-fit"},[_c('mdc-button',{attrs:{"id":"save-button","compact":true,"icon-type":"save"},nativeOn:{"click":function($event){_vm.saveSettings($event)}}},[_vm._v("\n        "+_vm._s(_vm._f("i18n")('options_save_btn'))+"\n      ")])],1)])])}]
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-8770aa70", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-8770aa70", __vue__options__)
+  }
+})()}
+},{"@material/dialog":2,"@material/tabs":5,"notifier":14,"options/mutation-types":26,"rules-grid":20,"settings":16,"vue":8,"vue-hot-reload-api":7}],22:[function(require,module,exports){
+;(function(){
+'use strict';
+
+const settings = require('settings');
+const mutationTypes = require('options/mutation-types');
+
+module.exports = {
+  name: 'app',
+
+  data() {
+    return {
+      storageTotal: 0,
+      storageInUse: 0
+    };
+  },
+
+  filters: {
+    sizeInKb(sizeInBytes) {
+      return Math.floor(sizeInBytes / 1000).toLocaleString();
+    }
+  },
+
+  computed: {
+    tab1Active() {
+      return this.activeTabIndex === 0;
+    },
+
+    tab2Active() {
+      return this.activeTabIndex === 1;
+    },
+
+    activeTabIndex() {
+      return this.$store.state.activeTabIndex;
+    },
+
+    /**
+     * Storage in use in percent
+     * @return {Number}
+     */
+    storeInUsePercent() {
+      return Math.floor((100 * this.storageInUse) / this.storageQuota);
+    },
+
+    autoBookmark: {
+      get() {
+        return this.$store.state.autoBookmark;
+      },
+      set(value) {
+        this.$store.commit(mutationTypes.SET_AUTO_BOOKMARK, value);
+      }
+    }
+  },
+
+  created() {
+    this.storageTotal = settings.getStorageQuotaBytes();
+
+    let updateStorageInUse = () => {
+      settings.getStorageBytesInUse().then(bytesInUse => {
+        this.storageInUse = bytesInUse;
+      });
+    };
+
+    updateStorageInUse();
+
+    // Listen to future storage changes
+    settings.onStorageChange(updateStorageInUse);
+  }
+};
+
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('options-header'),_vm._v(" "),_c('main',{staticClass:"panels-container mdc-toolbar-fixed-adjust"},[_c('div',{staticClass:"tab-panel",class:{ 'is-active': _vm.tab1Active },attrs:{"role":"tabpanel","aria-hidden":!_vm.tab1Active}},[_c('rules-list')],1),_vm._v(" "),_c('div',{staticClass:"tab-panel",class:{ 'is-active': _vm.tab2Active },attrs:{"role":"tabpanel","aria-hidden":!_vm.tab2Active}},[_c('div',{staticClass:"mdc-card other-settings-panel"},[_c('section',[_c('div',{staticClass:"mdc-form-field"},[_c('div',{staticClass:"mdc-checkbox"},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.autoBookmark),expression:"autoBookmark"}],staticClass:"mdc-checkbox__native-control",attrs:{"type":"checkbox","id":"auto-bookmark-checkbox"},domProps:{"checked":Array.isArray(_vm.autoBookmark)?_vm._i(_vm.autoBookmark,null)>-1:(_vm.autoBookmark)},on:{"__c":function($event){var $$a=_vm.autoBookmark,$$el=$event.target,$$c=$$el.checked?(true):(false);if(Array.isArray($$a)){var $$v=null,$$i=_vm._i($$a,$$v);if($$c){$$i<0&&(_vm.autoBookmark=$$a.concat($$v))}else{$$i>-1&&(_vm.autoBookmark=$$a.slice(0,$$i).concat($$a.slice($$i+1)))}}else{_vm.autoBookmark=$$c}}}}),_vm._v(" "),_c('div',{staticClass:"mdc-checkbox__background"},[_c('svg',{staticClass:"mdc-checkbox__checkmark",attrs:{"viewBox":"0 0 24 24"}},[_c('path',{staticClass:"mdc-checkbox__checkmark__path",attrs:{"fill":"none","stroke":"white","d":"M1.73,12.91 8.1,19.28 22.79,4.59"}})]),_vm._v(" "),_c('div',{staticClass:"mdc-checkbox__mixedmark"})])]),_vm._v(" "),_c('label',{attrs:{"for":"auto-bookmark-checkbox"}},[_vm._v("\n              "+_vm._s(_vm._f("i18n")('options_auto_bookmark_label'))+"\n            ")])])]),_vm._v(" "),_c('section',{staticClass:"storage-used-row"},[_c('div',{staticClass:"mdc-form-field"},[_c('label',[_vm._v(_vm._s(_vm._f("i18n")('options_storage_used_label')))]),_vm._v(":\n          ")]),_vm._v(" "),_c('div',{staticClass:"mdc-form-field storage-used-field"},[_c('div',{staticClass:"progress"},[_c('div',{staticClass:"progress-bar",style:({ width: _vm.storeInUsePercent + '%'  })},[_c('div',{staticClass:"progress-label"},[_vm._v("\n                  "+_vm._s(_vm._f("sizeInKb")(_vm.storageInUse))+" / "+_vm._s(_vm._f("sizeInKb")(_vm.storageTotal))+"\n                  "+_vm._s(_vm._f("i18n")('options_size_kb'))+"\n                ")])])])])])])])]),_vm._v(" "),_c('help-dialog')],1)}
+__vue__options__.staticRenderFns = []
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-55723af6", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-55723af6", __vue__options__)
+  }
+})()}
+},{"options/mutation-types":26,"settings":16,"vue":8,"vue-hot-reload-api":7}],26:[function(require,module,exports){
+'use strict';
+
+module.exports = {
+  SET_TAB_INDEX: 'set-tab-index',
+  SET_SETTINGS: 'set-settings',
+  SET_AUTO_BOOKMARK: 'set-auto-bookmark'
+};
+
+},{}],20:[function(require,module,exports){
 'use strict';
 
 const mdcSelect = require('@material/select');
@@ -641,51 +841,7 @@ module.exports = {
   addRule: actions.addRuleRow
 };
 
-},{"@material/auto-init":1,"@material/select":3,"bookmarks-modal":15,"constants":10,"dom-helper":11}],19:[function(require,module,exports){
-;(function(){
-'use strict';
-
-module.exports = {
-  name: 'options-header',
-  data() {
-    return {
-      greeting: 'Hello'
-    };
-  }
-};
-
-})()
-if (module.exports.__esModule) module.exports = module.exports.default
-var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
-if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('header',{staticClass:"mdc-toolbar mdc-toolbar--fixed"},[_c('div',{staticClass:"mdc-toolbar__row mdc-toolbar__row--fluid-height mdc-toolbar__row--dense"},[_c('section',{staticClass:"mdc-toolbar__section mdc-toolbar__section--align-start mdc-toolbar__section--shrink-to-fit"},[_c('mdc-button',{attrs:{"id":"export-button","title":"Export settings to file","compact":true,"icon-type":"download"}},[_vm._v("\n        Export\n      ")]),_vm._v(" "),_c('mdc-button',{attrs:{"id":"import-button","title":"Import settings from file","compact":true,"icon-type":"upload"}},[_vm._v("\n        Import\n      ")]),_vm._v(" "),_c('input',{staticStyle:{"display":"none"},attrs:{"type":"file","id":"import-file-input","accept":".json"}}),_vm._v(" "),_c('mdc-button',{attrs:{"id":"help-button","title":"Help","aria-label":"Help","icon-only":true,"icon-type":"help"}})],1),_vm._v(" "),_vm._m(0),_vm._v(" "),_c('section',{staticClass:"mdc-toolbar__section mdc-toolbar__section--align-end mdc-toolbar__section--shrink-to-fit"},[_c('mdc-button',{attrs:{"id":"save-button","compact":true,"icon-type":"save"}},[_vm._v("\n        Save\n      ")])],1)])])}
-__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',{staticClass:"mdc-toolbar__section"},[_c('nav',{staticClass:"mdc-tab-bar",attrs:{"id":"tabs-bar","role":"tablist"}},[_c('a',{staticClass:"mdc-tab mdc-tab--active",attrs:{"role":"tab"}},[_vm._v("\n          Rules\n        ")]),_vm._v(" "),_c('a',{staticClass:"mdc-tab",attrs:{"role":"tab"}},[_vm._v("\n          Other settings\n        ")]),_vm._v(" "),_c('span',{staticClass:"mdc-tab-bar__indicator"})])])}]
-if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
-  hotAPI.install(require("vue"), true)
-  if (!hotAPI.compatible) return
-  module.hot.accept()
-  if (!module.hot.data) {
-    hotAPI.createRecord("data-v-877d63d6", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-877d63d6", __vue__options__)
-  }
-})()}
-},{"vue":8,"vue-hot-reload-api":7}],18:[function(require,module,exports){
-var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
-if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('options-header')}
-__vue__options__.staticRenderFns = []
-if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
-  hotAPI.install(require("vue"), true)
-  if (!hotAPI.compatible) return
-  module.hot.accept()
-  if (!module.hot.data) {
-    hotAPI.createRecord("data-v-05db22c9", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-05db22c9", __vue__options__)
-  }
-})()}
-},{"vue":8,"vue-hot-reload-api":7}],17:[function(require,module,exports){
+},{"@material/auto-init":1,"@material/select":3,"bookmarks-modal":17,"constants":11,"dom-helper":12}],19:[function(require,module,exports){
 ;(function(){
 'use strict';
 
@@ -696,13 +852,21 @@ Vue.component('icon', require('components/icon'));
 module.exports = {
   props: {
     'compact': Boolean,
+    'dense': Boolean,
+    'primary': Boolean,
+    'raised': Boolean,
     'icon-type': String,
+    'icon-size': Number,
     'icon-only': Boolean
   },
+
   computed: {
-    classObject: function() {
+    classObject() {
       return {
         'mdc-button--compact': this.compact,
+        'mdc-button--dense': this.dense,
+        'mdc-button--primary': this.primary,
+        'mdc-button--raised': this.raised,
         'mdc-button--icon-align': !this.iconOnly,
         'mdc-button--icon': this.iconOnly
       };
@@ -714,7 +878,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('button',{staticClass:"mdc-button",class:_vm.classObject,attrs:{"type":"button"}},[(_vm.iconType)?_c('icon',{attrs:{"type":_vm.iconType}}):_vm._e(),_vm._v(" "),_vm._t("default")],2)}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('button',{staticClass:"mdc-button",class:_vm.classObject,attrs:{"type":"button"}},[(_vm.iconType)?_c('icon',{attrs:{"type":_vm.iconType,"size":_vm.iconSize}}):_vm._e(),_vm._v(" "),_vm._t("default")],2)}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -726,28 +890,28 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.reload("data-v-6bec4628", __vue__options__)
   }
 })()}
-},{"components/icon":16,"vue":8,"vue-hot-reload-api":7}],16:[function(require,module,exports){
+},{"components/icon":18,"vue":8,"vue-hot-reload-api":7}],18:[function(require,module,exports){
 ;(function(){
-  'use strict';
+'use strict';
 
-  const ICON_SIZE_CLASS_MAP = {
-    1: 'icon-size-18',
-    2: 'icon-size-24',
-    3: 'icon-size-36',
-    4: 'icon-size-48'
-  };
+const ICON_SIZE_CLASS_MAP = {
+  1: 'icon-size-20',
+  2: 'icon-size-24',
+  3: 'icon-size-36',
+  4: 'icon-size-48'
+};
 
-  module.exports = {
-    props: {
-      'type': String,
-      'size': Number
-    },
-    computed: {
-      sizeClass: function() {
-        return ICON_SIZE_CLASS_MAP[this.size] || '';
-      }
+module.exports = {
+  props: {
+    'type': String,
+    'size': Number
+  },
+  computed: {
+    sizeClass() {
+      return ICON_SIZE_CLASS_MAP[this.size] || '';
     }
-  };
+  }
+};
 
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
@@ -765,7 +929,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.reload("data-v-7e5a10b2", __vue__options__)
   }
 })()}
-},{"vue":8,"vue-hot-reload-api":7}],15:[function(require,module,exports){
+},{"vue":8,"vue-hot-reload-api":7}],17:[function(require,module,exports){
 'use strict';
 
 const mdcDialog = require('@material/dialog');
@@ -1062,7 +1226,7 @@ module.exports = {
   open: open
 };
 
-},{"@material/dialog":2,"bookmarks-helper":9,"constants":10,"dom-helper":11,"notifier":12}],12:[function(require,module,exports){
+},{"@material/dialog":2,"bookmarks-helper":10,"constants":11,"dom-helper":12,"notifier":14}],14:[function(require,module,exports){
 'use strict';
 
 const mdcSnackbar = require('@material/snackbar');
@@ -1182,7 +1346,24 @@ module.exports = {
   }
 };
 
-},{"@material/snackbar":4}],9:[function(require,module,exports){
+},{"@material/snackbar":4}],13:[function(require,module,exports){
+'use strict';
+
+const Vue = require('vue');
+
+function i18n(key) {
+  return chrome.i18n.getMessage(key);
+}
+
+module.exports = {
+  i18n,
+
+  register() {
+    Vue.filter('i18n', i18n);
+  }
+};
+
+},{"vue":8}],10:[function(require,module,exports){
 'use strict';
 
 /**
@@ -1237,6 +1418,817 @@ module.exports = {
   getBookmark,
   getBookmarkPath
 };
+
+},{}],9:[function(require,module,exports){
+/**
+ * vuex v2.3.0
+ * (c) 2017 Evan You
+ * @license MIT
+ */
+(function (global, factory) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+	typeof define === 'function' && define.amd ? define(factory) :
+	(global.Vuex = factory());
+}(this, (function () { 'use strict';
+
+var applyMixin = function (Vue) {
+  var version = Number(Vue.version.split('.')[0]);
+
+  if (version >= 2) {
+    var usesInit = Vue.config._lifecycleHooks.indexOf('init') > -1;
+    Vue.mixin(usesInit ? { init: vuexInit } : { beforeCreate: vuexInit });
+  } else {
+    // override init and inject vuex init procedure
+    // for 1.x backwards compatibility.
+    var _init = Vue.prototype._init;
+    Vue.prototype._init = function (options) {
+      if ( options === void 0 ) options = {};
+
+      options.init = options.init
+        ? [vuexInit].concat(options.init)
+        : vuexInit;
+      _init.call(this, options);
+    };
+  }
+
+  /**
+   * Vuex init hook, injected into each instances init hooks list.
+   */
+
+  function vuexInit () {
+    var options = this.$options;
+    // store injection
+    if (options.store) {
+      this.$store = options.store;
+    } else if (options.parent && options.parent.$store) {
+      this.$store = options.parent.$store;
+    }
+  }
+};
+
+var devtoolHook =
+  typeof window !== 'undefined' &&
+  window.__VUE_DEVTOOLS_GLOBAL_HOOK__;
+
+function devtoolPlugin (store) {
+  if (!devtoolHook) { return }
+
+  store._devtoolHook = devtoolHook;
+
+  devtoolHook.emit('vuex:init', store);
+
+  devtoolHook.on('vuex:travel-to-state', function (targetState) {
+    store.replaceState(targetState);
+  });
+
+  store.subscribe(function (mutation, state) {
+    devtoolHook.emit('vuex:mutation', mutation, state);
+  });
+}
+
+/**
+ * Get the first item that pass the test
+ * by second argument function
+ *
+ * @param {Array} list
+ * @param {Function} f
+ * @return {*}
+ */
+/**
+ * Deep copy the given object considering circular structure.
+ * This function caches all nested objects and its copies.
+ * If it detects circular structure, use cached copy to avoid infinite loop.
+ *
+ * @param {*} obj
+ * @param {Array<Object>} cache
+ * @return {*}
+ */
+
+
+/**
+ * forEach for object
+ */
+function forEachValue (obj, fn) {
+  Object.keys(obj).forEach(function (key) { return fn(obj[key], key); });
+}
+
+function isObject (obj) {
+  return obj !== null && typeof obj === 'object'
+}
+
+function isPromise (val) {
+  return val && typeof val.then === 'function'
+}
+
+function assert (condition, msg) {
+  if (!condition) { throw new Error(("[vuex] " + msg)) }
+}
+
+var Module = function Module (rawModule, runtime) {
+  this.runtime = runtime;
+  this._children = Object.create(null);
+  this._rawModule = rawModule;
+  var rawState = rawModule.state;
+  this.state = (typeof rawState === 'function' ? rawState() : rawState) || {};
+};
+
+var prototypeAccessors$1 = { namespaced: {} };
+
+prototypeAccessors$1.namespaced.get = function () {
+  return !!this._rawModule.namespaced
+};
+
+Module.prototype.addChild = function addChild (key, module) {
+  this._children[key] = module;
+};
+
+Module.prototype.removeChild = function removeChild (key) {
+  delete this._children[key];
+};
+
+Module.prototype.getChild = function getChild (key) {
+  return this._children[key]
+};
+
+Module.prototype.update = function update (rawModule) {
+  this._rawModule.namespaced = rawModule.namespaced;
+  if (rawModule.actions) {
+    this._rawModule.actions = rawModule.actions;
+  }
+  if (rawModule.mutations) {
+    this._rawModule.mutations = rawModule.mutations;
+  }
+  if (rawModule.getters) {
+    this._rawModule.getters = rawModule.getters;
+  }
+};
+
+Module.prototype.forEachChild = function forEachChild (fn) {
+  forEachValue(this._children, fn);
+};
+
+Module.prototype.forEachGetter = function forEachGetter (fn) {
+  if (this._rawModule.getters) {
+    forEachValue(this._rawModule.getters, fn);
+  }
+};
+
+Module.prototype.forEachAction = function forEachAction (fn) {
+  if (this._rawModule.actions) {
+    forEachValue(this._rawModule.actions, fn);
+  }
+};
+
+Module.prototype.forEachMutation = function forEachMutation (fn) {
+  if (this._rawModule.mutations) {
+    forEachValue(this._rawModule.mutations, fn);
+  }
+};
+
+Object.defineProperties( Module.prototype, prototypeAccessors$1 );
+
+var ModuleCollection = function ModuleCollection (rawRootModule) {
+  var this$1 = this;
+
+  // register root module (Vuex.Store options)
+  this.root = new Module(rawRootModule, false);
+
+  // register all nested modules
+  if (rawRootModule.modules) {
+    forEachValue(rawRootModule.modules, function (rawModule, key) {
+      this$1.register([key], rawModule, false);
+    });
+  }
+};
+
+ModuleCollection.prototype.get = function get (path) {
+  return path.reduce(function (module, key) {
+    return module.getChild(key)
+  }, this.root)
+};
+
+ModuleCollection.prototype.getNamespace = function getNamespace (path) {
+  var module = this.root;
+  return path.reduce(function (namespace, key) {
+    module = module.getChild(key);
+    return namespace + (module.namespaced ? key + '/' : '')
+  }, '')
+};
+
+ModuleCollection.prototype.update = function update$1 (rawRootModule) {
+  update(this.root, rawRootModule);
+};
+
+ModuleCollection.prototype.register = function register (path, rawModule, runtime) {
+    var this$1 = this;
+    if ( runtime === void 0 ) runtime = true;
+
+  var parent = this.get(path.slice(0, -1));
+  var newModule = new Module(rawModule, runtime);
+  parent.addChild(path[path.length - 1], newModule);
+
+  // register nested modules
+  if (rawModule.modules) {
+    forEachValue(rawModule.modules, function (rawChildModule, key) {
+      this$1.register(path.concat(key), rawChildModule, runtime);
+    });
+  }
+};
+
+ModuleCollection.prototype.unregister = function unregister (path) {
+  var parent = this.get(path.slice(0, -1));
+  var key = path[path.length - 1];
+  if (!parent.getChild(key).runtime) { return }
+
+  parent.removeChild(key);
+};
+
+function update (targetModule, newModule) {
+  // update target module
+  targetModule.update(newModule);
+
+  // update nested modules
+  if (newModule.modules) {
+    for (var key in newModule.modules) {
+      if (!targetModule.getChild(key)) {
+        console.warn(
+          "[vuex] trying to add a new module '" + key + "' on hot reloading, " +
+          'manual reload is needed'
+        );
+        return
+      }
+      update(targetModule.getChild(key), newModule.modules[key]);
+    }
+  }
+}
+
+var Vue; // bind on install
+
+var Store = function Store (options) {
+  var this$1 = this;
+  if ( options === void 0 ) options = {};
+
+  assert(Vue, "must call Vue.use(Vuex) before creating a store instance.");
+  assert(typeof Promise !== 'undefined', "vuex requires a Promise polyfill in this browser.");
+
+  var state = options.state; if ( state === void 0 ) state = {};
+  var plugins = options.plugins; if ( plugins === void 0 ) plugins = [];
+  var strict = options.strict; if ( strict === void 0 ) strict = false;
+
+  // store internal state
+  this._committing = false;
+  this._actions = Object.create(null);
+  this._mutations = Object.create(null);
+  this._wrappedGetters = Object.create(null);
+  this._modules = new ModuleCollection(options);
+  this._modulesNamespaceMap = Object.create(null);
+  this._subscribers = [];
+  this._watcherVM = new Vue();
+
+  // bind commit and dispatch to self
+  var store = this;
+  var ref = this;
+  var dispatch = ref.dispatch;
+  var commit = ref.commit;
+  this.dispatch = function boundDispatch (type, payload) {
+    return dispatch.call(store, type, payload)
+  };
+  this.commit = function boundCommit (type, payload, options) {
+    return commit.call(store, type, payload, options)
+  };
+
+  // strict mode
+  this.strict = strict;
+
+  // init root module.
+  // this also recursively registers all sub-modules
+  // and collects all module getters inside this._wrappedGetters
+  installModule(this, state, [], this._modules.root);
+
+  // initialize the store vm, which is responsible for the reactivity
+  // (also registers _wrappedGetters as computed properties)
+  resetStoreVM(this, state);
+
+  // apply plugins
+  plugins.concat(devtoolPlugin).forEach(function (plugin) { return plugin(this$1); });
+};
+
+var prototypeAccessors = { state: {} };
+
+prototypeAccessors.state.get = function () {
+  return this._vm._data.$$state
+};
+
+prototypeAccessors.state.set = function (v) {
+  assert(false, "Use store.replaceState() to explicit replace store state.");
+};
+
+Store.prototype.commit = function commit (_type, _payload, _options) {
+    var this$1 = this;
+
+  // check object-style commit
+  var ref = unifyObjectStyle(_type, _payload, _options);
+    var type = ref.type;
+    var payload = ref.payload;
+    var options = ref.options;
+
+  var mutation = { type: type, payload: payload };
+  var entry = this._mutations[type];
+  if (!entry) {
+    console.error(("[vuex] unknown mutation type: " + type));
+    return
+  }
+  this._withCommit(function () {
+    entry.forEach(function commitIterator (handler) {
+      handler(payload);
+    });
+  });
+  this._subscribers.forEach(function (sub) { return sub(mutation, this$1.state); });
+
+  if (options && options.silent) {
+    console.warn(
+      "[vuex] mutation type: " + type + ". Silent option has been removed. " +
+      'Use the filter functionality in the vue-devtools'
+    );
+  }
+};
+
+Store.prototype.dispatch = function dispatch (_type, _payload) {
+  // check object-style dispatch
+  var ref = unifyObjectStyle(_type, _payload);
+    var type = ref.type;
+    var payload = ref.payload;
+
+  var entry = this._actions[type];
+  if (!entry) {
+    console.error(("[vuex] unknown action type: " + type));
+    return
+  }
+  return entry.length > 1
+    ? Promise.all(entry.map(function (handler) { return handler(payload); }))
+    : entry[0](payload)
+};
+
+Store.prototype.subscribe = function subscribe (fn) {
+  var subs = this._subscribers;
+  if (subs.indexOf(fn) < 0) {
+    subs.push(fn);
+  }
+  return function () {
+    var i = subs.indexOf(fn);
+    if (i > -1) {
+      subs.splice(i, 1);
+    }
+  }
+};
+
+Store.prototype.watch = function watch (getter, cb, options) {
+    var this$1 = this;
+
+  assert(typeof getter === 'function', "store.watch only accepts a function.");
+  return this._watcherVM.$watch(function () { return getter(this$1.state, this$1.getters); }, cb, options)
+};
+
+Store.prototype.replaceState = function replaceState (state) {
+    var this$1 = this;
+
+  this._withCommit(function () {
+    this$1._vm._data.$$state = state;
+  });
+};
+
+Store.prototype.registerModule = function registerModule (path, rawModule) {
+  if (typeof path === 'string') { path = [path]; }
+  assert(Array.isArray(path), "module path must be a string or an Array.");
+  this._modules.register(path, rawModule);
+  installModule(this, this.state, path, this._modules.get(path));
+  // reset store to update getters...
+  resetStoreVM(this, this.state);
+};
+
+Store.prototype.unregisterModule = function unregisterModule (path) {
+    var this$1 = this;
+
+  if (typeof path === 'string') { path = [path]; }
+  assert(Array.isArray(path), "module path must be a string or an Array.");
+  this._modules.unregister(path);
+  this._withCommit(function () {
+    var parentState = getNestedState(this$1.state, path.slice(0, -1));
+    Vue.delete(parentState, path[path.length - 1]);
+  });
+  resetStore(this);
+};
+
+Store.prototype.hotUpdate = function hotUpdate (newOptions) {
+  this._modules.update(newOptions);
+  resetStore(this, true);
+};
+
+Store.prototype._withCommit = function _withCommit (fn) {
+  var committing = this._committing;
+  this._committing = true;
+  fn();
+  this._committing = committing;
+};
+
+Object.defineProperties( Store.prototype, prototypeAccessors );
+
+function resetStore (store, hot) {
+  store._actions = Object.create(null);
+  store._mutations = Object.create(null);
+  store._wrappedGetters = Object.create(null);
+  store._modulesNamespaceMap = Object.create(null);
+  var state = store.state;
+  // init all modules
+  installModule(store, state, [], store._modules.root, true);
+  // reset vm
+  resetStoreVM(store, state, hot);
+}
+
+function resetStoreVM (store, state, hot) {
+  var oldVm = store._vm;
+
+  // bind store public getters
+  store.getters = {};
+  var wrappedGetters = store._wrappedGetters;
+  var computed = {};
+  forEachValue(wrappedGetters, function (fn, key) {
+    // use computed to leverage its lazy-caching mechanism
+    computed[key] = function () { return fn(store); };
+    Object.defineProperty(store.getters, key, {
+      get: function () { return store._vm[key]; },
+      enumerable: true // for local getters
+    });
+  });
+
+  // use a Vue instance to store the state tree
+  // suppress warnings just in case the user has added
+  // some funky global mixins
+  var silent = Vue.config.silent;
+  Vue.config.silent = true;
+  store._vm = new Vue({
+    data: {
+      $$state: state
+    },
+    computed: computed
+  });
+  Vue.config.silent = silent;
+
+  // enable strict mode for new vm
+  if (store.strict) {
+    enableStrictMode(store);
+  }
+
+  if (oldVm) {
+    if (hot) {
+      // dispatch changes in all subscribed watchers
+      // to force getter re-evaluation for hot reloading.
+      store._withCommit(function () {
+        oldVm._data.$$state = null;
+      });
+    }
+    Vue.nextTick(function () { return oldVm.$destroy(); });
+  }
+}
+
+function installModule (store, rootState, path, module, hot) {
+  var isRoot = !path.length;
+  var namespace = store._modules.getNamespace(path);
+
+  // register in namespace map
+  if (module.namespaced) {
+    store._modulesNamespaceMap[namespace] = module;
+  }
+
+  // set state
+  if (!isRoot && !hot) {
+    var parentState = getNestedState(rootState, path.slice(0, -1));
+    var moduleName = path[path.length - 1];
+    store._withCommit(function () {
+      Vue.set(parentState, moduleName, module.state);
+    });
+  }
+
+  var local = module.context = makeLocalContext(store, namespace, path);
+
+  module.forEachMutation(function (mutation, key) {
+    var namespacedType = namespace + key;
+    registerMutation(store, namespacedType, mutation, local);
+  });
+
+  module.forEachAction(function (action, key) {
+    var namespacedType = namespace + key;
+    registerAction(store, namespacedType, action, local);
+  });
+
+  module.forEachGetter(function (getter, key) {
+    var namespacedType = namespace + key;
+    registerGetter(store, namespacedType, getter, local);
+  });
+
+  module.forEachChild(function (child, key) {
+    installModule(store, rootState, path.concat(key), child, hot);
+  });
+}
+
+/**
+ * make localized dispatch, commit, getters and state
+ * if there is no namespace, just use root ones
+ */
+function makeLocalContext (store, namespace, path) {
+  var noNamespace = namespace === '';
+
+  var local = {
+    dispatch: noNamespace ? store.dispatch : function (_type, _payload, _options) {
+      var args = unifyObjectStyle(_type, _payload, _options);
+      var payload = args.payload;
+      var options = args.options;
+      var type = args.type;
+
+      if (!options || !options.root) {
+        type = namespace + type;
+        if (!store._actions[type]) {
+          console.error(("[vuex] unknown local action type: " + (args.type) + ", global type: " + type));
+          return
+        }
+      }
+
+      return store.dispatch(type, payload)
+    },
+
+    commit: noNamespace ? store.commit : function (_type, _payload, _options) {
+      var args = unifyObjectStyle(_type, _payload, _options);
+      var payload = args.payload;
+      var options = args.options;
+      var type = args.type;
+
+      if (!options || !options.root) {
+        type = namespace + type;
+        if (!store._mutations[type]) {
+          console.error(("[vuex] unknown local mutation type: " + (args.type) + ", global type: " + type));
+          return
+        }
+      }
+
+      store.commit(type, payload, options);
+    }
+  };
+
+  // getters and state object must be gotten lazily
+  // because they will be changed by vm update
+  Object.defineProperties(local, {
+    getters: {
+      get: noNamespace
+        ? function () { return store.getters; }
+        : function () { return makeLocalGetters(store, namespace); }
+    },
+    state: {
+      get: function () { return getNestedState(store.state, path); }
+    }
+  });
+
+  return local
+}
+
+function makeLocalGetters (store, namespace) {
+  var gettersProxy = {};
+
+  var splitPos = namespace.length;
+  Object.keys(store.getters).forEach(function (type) {
+    // skip if the target getter is not match this namespace
+    if (type.slice(0, splitPos) !== namespace) { return }
+
+    // extract local getter type
+    var localType = type.slice(splitPos);
+
+    // Add a port to the getters proxy.
+    // Define as getter property because
+    // we do not want to evaluate the getters in this time.
+    Object.defineProperty(gettersProxy, localType, {
+      get: function () { return store.getters[type]; },
+      enumerable: true
+    });
+  });
+
+  return gettersProxy
+}
+
+function registerMutation (store, type, handler, local) {
+  var entry = store._mutations[type] || (store._mutations[type] = []);
+  entry.push(function wrappedMutationHandler (payload) {
+    handler(local.state, payload);
+  });
+}
+
+function registerAction (store, type, handler, local) {
+  var entry = store._actions[type] || (store._actions[type] = []);
+  entry.push(function wrappedActionHandler (payload, cb) {
+    var res = handler({
+      dispatch: local.dispatch,
+      commit: local.commit,
+      getters: local.getters,
+      state: local.state,
+      rootGetters: store.getters,
+      rootState: store.state
+    }, payload, cb);
+    if (!isPromise(res)) {
+      res = Promise.resolve(res);
+    }
+    if (store._devtoolHook) {
+      return res.catch(function (err) {
+        store._devtoolHook.emit('vuex:error', err);
+        throw err
+      })
+    } else {
+      return res
+    }
+  });
+}
+
+function registerGetter (store, type, rawGetter, local) {
+  if (store._wrappedGetters[type]) {
+    console.error(("[vuex] duplicate getter key: " + type));
+    return
+  }
+  store._wrappedGetters[type] = function wrappedGetter (store) {
+    return rawGetter(
+      local.state, // local state
+      local.getters, // local getters
+      store.state, // root state
+      store.getters // root getters
+    )
+  };
+}
+
+function enableStrictMode (store) {
+  store._vm.$watch(function () { return this._data.$$state }, function () {
+    assert(store._committing, "Do not mutate vuex store state outside mutation handlers.");
+  }, { deep: true, sync: true });
+}
+
+function getNestedState (state, path) {
+  return path.length
+    ? path.reduce(function (state, key) { return state[key]; }, state)
+    : state
+}
+
+function unifyObjectStyle (type, payload, options) {
+  if (isObject(type) && type.type) {
+    options = payload;
+    payload = type;
+    type = type.type;
+  }
+
+  assert(typeof type === 'string', ("Expects string as the type, but found " + (typeof type) + "."));
+
+  return { type: type, payload: payload, options: options }
+}
+
+function install (_Vue) {
+  if (Vue) {
+    console.error(
+      '[vuex] already installed. Vue.use(Vuex) should be called only once.'
+    );
+    return
+  }
+  Vue = _Vue;
+  applyMixin(Vue);
+}
+
+// auto install in dist mode
+if (typeof window !== 'undefined' && window.Vue) {
+  install(window.Vue);
+}
+
+var mapState = normalizeNamespace(function (namespace, states) {
+  var res = {};
+  normalizeMap(states).forEach(function (ref) {
+    var key = ref.key;
+    var val = ref.val;
+
+    res[key] = function mappedState () {
+      var state = this.$store.state;
+      var getters = this.$store.getters;
+      if (namespace) {
+        var module = getModuleByNamespace(this.$store, 'mapState', namespace);
+        if (!module) {
+          return
+        }
+        state = module.context.state;
+        getters = module.context.getters;
+      }
+      return typeof val === 'function'
+        ? val.call(this, state, getters)
+        : state[val]
+    };
+    // mark vuex getter for devtools
+    res[key].vuex = true;
+  });
+  return res
+});
+
+var mapMutations = normalizeNamespace(function (namespace, mutations) {
+  var res = {};
+  normalizeMap(mutations).forEach(function (ref) {
+    var key = ref.key;
+    var val = ref.val;
+
+    val = namespace + val;
+    res[key] = function mappedMutation () {
+      var args = [], len = arguments.length;
+      while ( len-- ) args[ len ] = arguments[ len ];
+
+      if (namespace && !getModuleByNamespace(this.$store, 'mapMutations', namespace)) {
+        return
+      }
+      return this.$store.commit.apply(this.$store, [val].concat(args))
+    };
+  });
+  return res
+});
+
+var mapGetters = normalizeNamespace(function (namespace, getters) {
+  var res = {};
+  normalizeMap(getters).forEach(function (ref) {
+    var key = ref.key;
+    var val = ref.val;
+
+    val = namespace + val;
+    res[key] = function mappedGetter () {
+      if (namespace && !getModuleByNamespace(this.$store, 'mapGetters', namespace)) {
+        return
+      }
+      if (!(val in this.$store.getters)) {
+        console.error(("[vuex] unknown getter: " + val));
+        return
+      }
+      return this.$store.getters[val]
+    };
+    // mark vuex getter for devtools
+    res[key].vuex = true;
+  });
+  return res
+});
+
+var mapActions = normalizeNamespace(function (namespace, actions) {
+  var res = {};
+  normalizeMap(actions).forEach(function (ref) {
+    var key = ref.key;
+    var val = ref.val;
+
+    val = namespace + val;
+    res[key] = function mappedAction () {
+      var args = [], len = arguments.length;
+      while ( len-- ) args[ len ] = arguments[ len ];
+
+      if (namespace && !getModuleByNamespace(this.$store, 'mapActions', namespace)) {
+        return
+      }
+      return this.$store.dispatch.apply(this.$store, [val].concat(args))
+    };
+  });
+  return res
+});
+
+function normalizeMap (map) {
+  return Array.isArray(map)
+    ? map.map(function (key) { return ({ key: key, val: key }); })
+    : Object.keys(map).map(function (key) { return ({ key: key, val: map[key] }); })
+}
+
+function normalizeNamespace (fn) {
+  return function (namespace, map) {
+    if (typeof namespace !== 'string') {
+      map = namespace;
+      namespace = '';
+    } else if (namespace.charAt(namespace.length - 1) !== '/') {
+      namespace += '/';
+    }
+    return fn(namespace, map)
+  }
+}
+
+function getModuleByNamespace (store, helper, namespace) {
+  var module = store._modulesNamespaceMap[namespace];
+  if (!module) {
+    console.error(("[vuex] module namespace not found in " + helper + "(): " + namespace));
+  }
+  return module
+}
+
+var index = {
+  Store: Store,
+  install: install,
+  version: '2.3.0',
+  mapState: mapState,
+  mapMutations: mapMutations,
+  mapGetters: mapGetters,
+  mapActions: mapActions
+};
+
+return index;
+
+})));
 
 },{}],8:[function(require,module,exports){
 (function (process,global){

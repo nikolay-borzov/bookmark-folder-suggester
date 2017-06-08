@@ -9,9 +9,7 @@
 </head>
 
 <body class="mdc-typography">
-  <div id="app">
-    <options-header></options-header>
-  </div>
+  <div id="app"></div>
   
   <main id="panels-container"
         class="panels-container mdc-toolbar-fixed-adjust">
@@ -29,37 +27,7 @@
     </div>
     <div class="tab-panel mdc-card other-settings-panel"
          role="tabpanel" aria-hidden="true">
-      <div>
-        <div class="mdc-form-field">
-          <div class="mdc-checkbox">
-            <input type="checkbox" id="auto-bookmark-checkbox"
-                  class="mdc-checkbox__native-control"/>
-            <div class="mdc-checkbox__background">
-              <svg class="mdc-checkbox__checkmark" viewBox="0 0 24 24">
-                <path class="mdc-checkbox__checkmark__path"
-                      fill="none" stroke="white"
-                      d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
-              </svg>
-              <div class="mdc-checkbox__mixedmark"></div>
-            </div>
-          </div>
-          <label for="auto-bookmark-checkbox">Bookmark into first suggested folder</label>
-        </div>
-      </div>
-
-      <div class="storage-used-row">
-        <div class="mdc-form-field">
-          <label>Storage used:</label>
-        </div>
-        <div class="mdc-form-field storage-used-field">
-          <div class="progress">
-            <div id="storage-used-progress-bar" class="progress-bar">
-              <div id="storage-used-text" class="progress-label"></div>
-            </div>
-          </div>
-          
-        </div>
-      </div>
+    
     </div>
   </main>
 
@@ -98,78 +66,6 @@
         <button type="button"
                 class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept">
           Confirm
-        </button>
-      </footer>
-    </div>
-    <div class="mdc-dialog__backdrop"></div>
-  </aside>
-
-  <aside id="help-dialog"
-         class="mdc-dialog"
-         role="alertdialog"
-         aria-labelledby="help-dialog-header"
-         aria-describedby="help-dialog-body">
-    <div class="mdc-dialog__surface">
-      <header class="mdc-dialog__header mdc-theme--primary-bg">
-        <h2 id="help-dialog-header"
-            class="mdc-dialog__header__title">
-          Help
-        </h2>
-      </header>
-      <section id="help-dialog-body"
-               class="mdc-dialog__body mdc-dialog__body--scrollable">
-        <h3 class="mdc-typography--subheading2">Create a rule</h3>
-        <ol>
-          <li>Click on FAB button (circle button with a plus sign)</li>
-          <li>Click on "Select folder" button and select bookmark folder</li>
-          <li>Specify one or more expressions:
-            <div class="mdc-theme--text-hint-on-light">
-              Expressions operation is a logical conjunction - expression are AND-ed. 
-            </div>
-            <ol>
-              <li>Set expression type - "URL starts with", "Title contains" and etc.</li>
-              <li>
-                Set expression value - URL or part of the URL or part of the Title
-                <div class="mdc-theme--text-hint-on-light">
-                  For example if you want to select any page with URL containing "JavaScript" and on "https://developer.mozilla.org" site - you need to set:
-                  <ul>
-                    <li>URL is on domain: "developer.mozilla.org"</li>
-                    <li>URL contains: "JavaScript"</li>
-                  </ul>
-                </div>
-                <div class="mdc-theme--text-hint-on-light">
-                  Expression value is case insensitive
-                </div>
-              </li>
-            </ol>
-          </li>
-        </ol>
-
-        <h3 class="mdc-typography--subheading2">Create a rule for current page</h3>
-        <p class="mdc-typography--body1">You can add a rule for current the page by clicking on "Add rule" button inside browse action popup.
-        Page title and url is copied to a new rule as expression values.
-        If the page is already bookmarked the bookmark's folder will be copied to rule.</p>
-
-        <h3 class="mdc-typography--subheading2">Expression types</h3>
-        <ul>
-          <li>
-            URL starts with - matches URLs starting with specified value (e.g. "http://www.bbc.com/news/video_and_audio/")
-          </li>
-          <li>
-            URL is on domain - matches URLs within specified domain (e.g. "www.bbc.com")
-          </li>
-          <li>
-            URL contains - matches URLs containing specified value (e.g. "rss")
-          </li>
-          <li>
-            Title contains - matches pages with url containing specified substring
-          </li>
-        </ul>
-      </section>
-      <footer class="mdc-dialog__footer mdc-theme--primary-bg">
-        <button type="button"
-                class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel">
-          Close
         </button>
       </footer>
     </div>

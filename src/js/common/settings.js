@@ -6,6 +6,8 @@
  * @property {boolean} autoBookmark
  */
 
+const STORAGE_SIZE_EXCEEDED_ERROR_KEY = 'QUOTA_BYTES_PER_ITEM';
+
 let storage = chrome.storage.local;
 
 const defaultSettings = {
@@ -32,8 +34,17 @@ function get(key) {
 function set(settings) {
   return new Promise((resolve, reject) => {
     storage.set(settings, function() {
-      if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError);
+      let error = chrome.runtime.lastError;
+
+      if (error) {
+        let message;
+        if (error.message.includes(STORAGE_SIZE_EXCEEDED_ERROR_KEY)) {
+          message = 'Storage size limit is exceeded';
+        } else {
+          message = 'Unexpected error';
+        }
+
+        reject(message);
       } else {
         resolve(settings);
       }
@@ -153,6 +164,14 @@ function getStorageQuotaBytes() {
   return storage.QUOTA_BYTES;
 }
 
+/**
+ * Registers storage change event handler
+ * @param {Function} handler
+ */
+function onStorageChange(handler) {
+  chrome.storage.onChanged.addListener(handler);
+}
+
 module.exports = {
   get,
   set,
@@ -161,5 +180,6 @@ module.exports = {
   setRuleSuggestData,
   getRuleSuggestData,
   getStorageBytesInUse,
-  getStorageQuotaBytes
+  getStorageQuotaBytes,
+  onStorageChange
 };

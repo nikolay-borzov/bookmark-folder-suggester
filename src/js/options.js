@@ -2,49 +2,23 @@
 
 const Vue = require('vue');
 
-const mdcDialog = require('@material/dialog');
-const mdcTabs = require('@material/tabs');
-
 const settings = require('settings');
 const rulesGrid = require('rules-grid');
 const rulesEngine = require('rules-engine');
 const bookmarksHelper = require('bookmarks-helper');
 const notifier = require('notifier');
+const filters = require('filters');
 
-const STORAGE_SIZE_EXCEEDED_ERROR_KEY = 'QUOTA_BYTES_PER_ITEM';
+Vue.component('icon', require('components/icon'));
+Vue.component('mdc-button', require('components/mdc-button'));
+Vue.component('options-header', require('options/components/header'));
+Vue.component('help-dialog', require('options/components/help-dialog'));
+Vue.component('rules-list', require('options/components/rules-list'));
 
-let helpDialog = null;
+const store = require('options/store');
+const app = require('options/components/app');
 
-let elements = {
-  autoBookmarkCheckbox: null,
-  storageUsedText: null,
-  storageProgressBar: null
-};
-
-function initTabs() {
-  let tabBar = window.dynamicTabBar = new mdcTabs.MDCTabBar(document.getElementById('tabs-bar'));
-  tabBar.preventDefaultOnClick = true;
-
-  let panelsContainer = document.getElementById('panels-container');
-
-  let selectPanel = (activeTabIndex) => {
-    let activePanel = $('.tab-panel.is-active', panelsContainer);
-    activePanel.classList.remove('is-active');
-    $.set(activePanel, {
-      'aria-hidden': true
-    });
-
-    let panel = $(`.tab-panel:nth-child(${activeTabIndex + 1})`, panelsContainer);
-    panel.classList.add('is-active');
-    $.set(panel, {
-      'aria-hidden': false
-    });
-  };
-
-  tabBar.listen('MDCTabBar:change', ({ detail: tabs }) => {
-    selectPanel(tabs.activeTabIndex);
-  });
-}
+const mutationTypes = require('options/mutation-types');
 
 /**
  * Restores options
@@ -56,19 +30,10 @@ function restore(settingsObj) {
     // Add suggested rule if one exists
     addSuggestedRule();
 
-    elements.autoBookmarkCheckbox.checked = settingsObj.autoBookmark;
+    // Elements.autoBookmarkCheckbox.checked = settingsObj.autoBookmark;
 
-    settings.getStorageBytesInUse().then(bytesInUse => {
-      const quota = settings.getStorageQuotaBytes();
-
-      let inUseKb = Math.floor(bytesInUse / 1000).toLocaleString();
-      let quotaKb = Math.floor(quota / 1000).toLocaleString();
-
-      let usagePercent = Math.floor((100 * bytesInUse) / quota);
-
-      elements.storageUsedText.innerText = `${inUseKb}/${quotaKb} Kb`;
-      $.style(elements.storageProgressBar, { width: `${usagePercent}%` });
-    });
+    // TODO: Temporary
+    store.commit(mutationTypes.SET_SETTINGS, settingsObj);
   };
 
   if (settingsObj) {
@@ -118,94 +83,8 @@ function addSuggestedRule() {
   });
 }
 
-let actions = {
-  /**
-   * Saves options
-   * @return {Promise}
-   */
-  save() {
-    notifier.progressStart('Saving...');
-    let settingsObj = {
-      rules: rulesGrid.getRules(),
-      autoBookmark: elements.autoBookmarkCheckbox.checked
-    };
-
-    return settings.set(settingsObj)
-      .then(settingsObj => {
-        notifier.success('Saved');
-
-        return settingsObj;
-      })
-      .catch(error => {
-        if (error.message.includes(STORAGE_SIZE_EXCEEDED_ERROR_KEY)) {
-          notifier.error('Storage size limit is exceeded');
-        } else {
-          notifier.error('Unexpected error');
-        }
-      })
-      .then(notifier.progressEnd);
-  },
-
-  /**
-   * Exports settings to file
-   */
-  export() {
-    // Save before exporting
-    settings.set({ rules: rulesGrid.getRules() })
-      .then(settingsObj => {
-        notifier.progressStart('Exporting...');
-
-        settings.exportToFile(settingsObj)
-          .then(notifier.progressEnd);
-      });
-  },
-
-  /**
-   * Imports settings from file
-   * @this Event
-   */
-  import() {
-    settings.importFromFile(this.files[0])
-      .then(restore)
-      .catch(() => notifier.error('Cannot import settings file'));
-  },
-
-  getHelp() {
-    if (!helpDialog) {
-      helpDialog = new mdcDialog.MDCDialog(document.getElementById('help-dialog'));
-    }
-
-    helpDialog.show();
-  }
-};
-
 $.ready().then(() => {
   rulesGrid.init();
-
-  elements.autoBookmarkCheckbox = document.getElementById('auto-bookmark-checkbox');
-  elements.storageUsedText = document.getElementById('storage-used-text');
-  elements.storageProgressBar = document.getElementById('storage-used-progress-bar');
-
-  // Save settings
-  let saveButton = document.getElementById('save-button');
-  saveButton.addEventListener('click', actions.save);
-
-  // Export settings to file
-  let exportButton = document.getElementById('export-button');
-  exportButton.addEventListener('click', actions.export);
-
-  // Process selected settings files
-  let importFileInput = document.getElementById('import-file-input');
-  importFileInput.addEventListener('change', actions.import);
-
-  // Open file selection dialog on import button click
-  let importButton = document.getElementById('import-button');
-  importButton.addEventListener('click', () => {
-    importFileInput.click();
-  });
-
-  let helpButton = document.getElementById('help-button');
-  helpButton.addEventListener('click', actions.getHelp);
 
   // Listen to message in case options page is already open
   chrome.runtime.onMessage.addListener(request => {
@@ -214,25 +93,17 @@ $.ready().then(() => {
     }
   });
 
-  initTabs();
   restore();
 });
 
-Vue.component('options-header', require('components/options-header'));
-Vue.component('icon', require('components/icon'));
-Vue.component('mdc-button', require('components/mdc-button'));
+/* Vue.config.errorHandler = function() {
+  notifier.error('Vue error. See console for details');
+};*/
 
-const app = require('components/options-app');
+filters.register();
 
 new Vue({
   el: '#app',
-  render: h => h(app)/* ,
-  data: {
-    input: '# hello'
-  },
-  computed: {
-    compiledMarkdown: function() {
-      return this.input;
-    }
-  }*/
+  store,
+  render: h => h(app)
 });

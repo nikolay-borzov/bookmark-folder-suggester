@@ -74,10 +74,6 @@
   fill: $color-icon-dark-focused;
 }
 
-.mdc-button--dense > .icon {
-  @extend %icon-size-18;
-}
-
 .mdc-theme--dark {
   .icon {
     fill: $color-icon-light;
