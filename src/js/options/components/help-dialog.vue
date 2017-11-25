@@ -1,5 +1,5 @@
 <template>
-  <aside id="help-dialog"  v-once
+  <aside id="help-dialog" v-once
          class="mdc-dialog"
          role="alertdialog"
          aria-labelledby="help-dialog-header"
@@ -75,3 +75,7 @@
     <div class="mdc-dialog__backdrop"></div>
   </aside>
 </template>
+
+<script>
+module.exports = { name: 'help-dialog' }
+</script>

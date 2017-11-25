@@ -9,11 +9,15 @@ const bookmarksHelper = require('bookmarks-helper');
 const notifier = require('notifier');
 const filters = require('filters');
 
-Vue.component('icon', require('components/icon'));
-Vue.component('mdc-button', require('components/mdc-button'));
-Vue.component('options-header', require('options/components/header'));
-Vue.component('help-dialog', require('options/components/help-dialog'));
-Vue.component('rules-list', require('options/components/rules-list'));
+const components = [
+  require('components/icon'),
+  require('components/mdc-button'),
+  require('options/components/header'),
+  require('options/components/rules-list'),
+  require('options/components/help-dialog')
+];
+
+components.forEach(component => Vue.component(component.name, component));
 
 const store = require('options/store');
 const app = require('options/components/app');

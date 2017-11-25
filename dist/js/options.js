@@ -10,11 +10,15 @@ const bookmarksHelper = require('bookmarks-helper');
 const notifier = require('notifier');
 const filters = require('filters');
 
-Vue.component('icon', require('components/icon'));
-Vue.component('mdc-button', require('components/mdc-button'));
-Vue.component('options-header', require('options/components/header'));
-Vue.component('help-dialog', require('options/components/help-dialog'));
-Vue.component('rules-list', require('options/components/rules-list'));
+const components = [
+  require('components/icon'),
+  require('components/mdc-button'),
+  require('options/components/header'),
+  require('options/components/rules-list'),
+  require('options/components/help-dialog')
+];
+
+components.forEach(component => Vue.component(component.name, component));
 
 const store = require('options/store');
 const app = require('options/components/app');
@@ -204,6 +208,90 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   }
 })()}
 },{"@material/auto-init":1,"@material/select":3,"constants":11,"filters":13,"vue":8,"vue-hot-reload-api":7}],24:[function(require,module,exports){
+;(function(){
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+module.exports = { name: 'help-dialog' }
+
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
 __vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _vm._m(0)}
@@ -845,11 +933,9 @@ module.exports = {
 ;(function(){
 'use strict';
 
-const Vue = require('vue');
-
-Vue.component('icon', require('components/icon'));
-
 module.exports = {
+  name: 'mdc-button',
+
   props: {
     'compact': Boolean,
     'dense': Boolean,
@@ -890,7 +976,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.reload("data-v-6bec4628", __vue__options__)
   }
 })()}
-},{"components/icon":18,"vue":8,"vue-hot-reload-api":7}],18:[function(require,module,exports){
+},{"vue":8,"vue-hot-reload-api":7}],18:[function(require,module,exports){
 ;(function(){
 'use strict';
 
@@ -902,10 +988,13 @@ const ICON_SIZE_CLASS_MAP = {
 };
 
 module.exports = {
+  name: 'icon',
+
   props: {
     'type': String,
     'size': Number
   },
+
   computed: {
     sizeClass() {
       return ICON_SIZE_CLASS_MAP[this.size] || '';

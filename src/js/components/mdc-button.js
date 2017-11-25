@@ -1,10 +1,8 @@
 'use strict';
 
-const Vue = require('vue');
-
-Vue.component('icon', require('components/icon'));
-
 module.exports = {
+  name: 'mdc-button',
+
   props: {
     'compact': Boolean,
     'dense': Boolean,

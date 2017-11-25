@@ -8,10 +8,13 @@ const ICON_SIZE_CLASS_MAP = {
 };
 
 module.exports = {
+  name: 'icon',
+
   props: {
     'type': String,
     'size': Number
   },
+
   computed: {
     sizeClass() {
       return ICON_SIZE_CLASS_MAP[this.size] || '';
