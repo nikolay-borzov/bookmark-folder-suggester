@@ -1,4 +1,6 @@
 # Bookmark Folder Suggester
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fnikolay-borzov%2Fbookmark-folder-suggester.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fnikolay-borzov%2Fbookmark-folder-suggester?ref=badge_shield)
+
 Chrome extension that suggests folder for a bookmark using predefined rules.
 
 Suggestion may be based on:
@@ -41,3 +43,7 @@ Suggestion may be based on:
 * [svg2png](https://github.com/domenic/svg2png)
 * [npm-check-updates](https://github.com/tjunnone/npm-check-updates)
 * [SVG-edit](https://github.com/SVG-Edit/svgedit)
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fnikolay-borzov%2Fbookmark-folder-suggester.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fnikolay-borzov%2Fbookmark-folder-suggester?ref=badge_large)
