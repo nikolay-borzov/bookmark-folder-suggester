@@ -21,6 +21,7 @@
 body {
   min-width: $options-body-min-width;
   min-height: $options-body-min-height;
+  max-height: 700px;
 
   &::after {
     @include mdc-theme-prop(background-color, text-primary-on-light);
@@ -54,7 +55,7 @@ body {
 .panels-container {
   @extend %block-padding;
   /* Fix missing scrollbar */
-  max-height: 90vh;
+  max-height: 700px;
   overflow: auto;
 }
 
