@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Bookmark Folder Suggester",
   "short_name": "Bookmark Folder Suggester",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Nikolay Borzov (chintsu)",
 
   "description": "Suggests folder for a bookmark using predefined rules",
@@ -28,10 +28,6 @@
     "chrome_style": false
   },
 
-  "permissions": [
-    "activeTab",
-    "bookmarks",
-    "storage"
-  ],
+  "permissions": ["activeTab", "bookmarks", "storage", "downloads"],
   "minimum_chrome_version": "57.0.2987.133"
 }

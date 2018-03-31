@@ -202,14 +202,11 @@ function exportToFile(settings) {
 
     let fileName = `bookmark-suggester-settings-${dateString}.json`;
 
-    let a = $.create('a', {
-      'href': url,
-      'download': fileName,
-      'type': 'text/plain'
+    chrome.downloads.download({
+      url: url,
+      filename: fileName
     });
 
-    // Download file
-    a.dispatchEvent(new MouseEvent('click'));
     // Release URL object
     window.URL.revokeObjectURL(blob);
 

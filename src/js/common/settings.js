@@ -60,6 +60,12 @@ function exportToFile(settings) {
 
     let fileName = `bookmark-suggester-settings-${dateString}.json`;
 
+    chrome.downloads.download({
+      url: url,
+      filename: fileName
+    });
+
+    /* Doesn't work anymore
     let a = $.create('a', {
       'href': url,
       'download': fileName,
@@ -68,6 +74,7 @@ function exportToFile(settings) {
 
     // Download file
     a.dispatchEvent(new MouseEvent('click'));
+    */
     // Release URL object
     window.URL.revokeObjectURL(blob);
 

@@ -1,22 +1,22 @@
-@import '@material/typography/mdc-typography';
-@import '@material/toolbar/mdc-toolbar';
-@import '@material/button/mdc-button';
-@import '@material/fab/mdc-fab';
-@import '@material/card/mdc-card';
-@import '@material/textfield/mdc-textfield';
+@import "@material/typography/mdc-typography";
+@import "@material/toolbar/mdc-toolbar";
+@import "@material/button/mdc-button";
+@import "@material/fab/mdc-fab";
+@import "@material/card/mdc-card";
+@import "@material/textfield/mdc-textfield";
 // Order matters for three next modules
-@import '@material/list/mdc-list';
-@import '@material/menu/mdc-menu';
-@import '@material/form-field/mdc-form-field';
-@import '@material/select/mdc-select';
-@import '@material/dialog/mdc-dialog';
-@import '@material/snackbar/mdc-snackbar';
-@import '@material/tabs/mdc-tabs';
-@import '@material/checkbox/mdc-checkbox';
+@import "@material/list/mdc-list";
+@import "@material/menu/mdc-menu";
+@import "@material/form-field/mdc-form-field";
+@import "@material/select/mdc-select";
+@import "@material/dialog/mdc-dialog";
+@import "@material/snackbar/mdc-snackbar";
+@import "@material/tabs/mdc-tabs";
+@import "@material/checkbox/mdc-checkbox";
 // Self
-@import 'common';
-@import 'bookmarks-modal';
-@import 'rules-grid';
+@import "common";
+@import "bookmarks-modal";
+@import "rules-grid";
 
 body {
   min-width: $options-body-min-width;
@@ -31,8 +31,8 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    transition: opacity 120ms 0ms cubic-bezier(0, 0, .2, 1);
-    content: ' ';
+    transition: opacity 120ms 0ms cubic-bezier(0, 0, 0.2, 1);
+    content: " ";
     opacity: 0;
     z-index: -1;
   }
@@ -53,6 +53,9 @@ body {
 
 .panels-container {
   @extend %block-padding;
+  /* Fix missing scrollbar */
+  max-height: 90vh;
+  overflow: auto;
 }
 
 .other-settings-panel {
@@ -92,4 +95,3 @@ body {
     flex-grow: 2;
   }
 }
-
